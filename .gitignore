@@ -1,0 +1,27 @@
+# OS
+.DS_Store
+Thumbs.db
+*~
+*.swp
+
+# IDEs
+.idea/
+.vscode/
+*.code-workspace
+
+# Root level
+node_modules/
+.env
+.env.local
+.env.*.local
+.env.*
+!.env.example
+
+# Custom logs / Agent directories
+.claude/
+.agents/
+.gsd/
+
+# Docs
+docs/review
+
