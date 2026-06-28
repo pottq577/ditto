@@ -1,6 +1,7 @@
 package com.ditto.backend.domain.sticker.service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -52,21 +53,22 @@ public class StickerService {
 
     @Transactional(readOnly = true)
     public List<StickerResponseDto> getCoupleStickers(Long coupleId) {
-        LocalDateTime now = LocalDateTime.now();
+        ZoneId zoneId = ZoneId.of("Asia/Seoul");
+        LocalDateTime now = LocalDateTime.now(zoneId);
         LocalDateTime start;
         LocalDateTime end;
 
         if (now.getHour() < 6) {
-            // 오전 6시 이전이면 어제 오전 6시부터 오늘 오전 6시까지
+            // 오전 6시 이전이면 어제 오전 6시부터 오늘 오전 6시 미만
             start = now.minusDays(1).withHour(6).withMinute(0).withSecond(0).withNano(0);
             end = now.withHour(6).withMinute(0).withSecond(0).withNano(0);
         } else {
-            // 오전 6시 이후면 오늘 오전 6시부터 내일 오전 6시까지
+            // 오전 6시 이후면 오늘 오전 6시부터 내일 오전 6시 미만
             start = now.withHour(6).withMinute(0).withSecond(0).withNano(0);
             end = now.plusDays(1).withHour(6).withMinute(0).withSecond(0).withNano(0);
         }
 
-        return stickerRepository.findByCoupleIdAndCreatedAtBetween(coupleId, start, end).stream()
+        return stickerRepository.findByCoupleIdAndCreatedAtGreaterThanEqualAndCreatedAtLessThan(coupleId, start, end).stream()
                 .map(s -> new StickerResponseDto(s.getId(), s.getImageUrl(), s.getUser().getId()))
                 .collect(Collectors.toList());
     }
