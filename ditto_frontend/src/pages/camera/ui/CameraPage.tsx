@@ -11,6 +11,7 @@ import * as FileSystem from "expo-file-system";
 import imglyRemoveBackground, { Config } from "@imgly/background-removal";
 import { Logger } from "../../../shared/lib/logger";
 import { styles } from './CameraPage.styles';
+import { API_BASE_URL } from "../../../shared/api/api";
 
 export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
   const [permission, requestPermission] = useCameraPermissions();
@@ -118,13 +119,10 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
       } as any);
 
       // 더미 데이터: userId=1, coupleId=1
-      const response = await fetch(
-        "http://localhost:8080/api/v1/stickers?userId=1&coupleId=1",
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
+      const response = await fetch(`${API_BASE_URL}/api/v1/stickers?userId=1&coupleId=1`, {
+        method: "POST",
+        body: formData,
+      });
 
       if (response.ok) {
         alert("전송 완료!");

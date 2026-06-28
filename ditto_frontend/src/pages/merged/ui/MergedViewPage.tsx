@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { Logger } from "../../../shared/lib/logger";
 import { styles } from "./MergedViewPage.styles";
+import { API_BASE_URL } from "../../../shared/api/api";
 
 interface Sticker {
   id: number;
@@ -32,9 +33,7 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
 
   const fetchStickers = async () => {
     try {
-      const response = await fetch(
-        "http://localhost:8080/api/v1/stickers/couple/1",
-      );
+      const response = await fetch(`${API_BASE_URL}/api/v1/stickers/couple/1`);
       if (response.ok) {
         const data: Sticker[] = await response.json();
         setStickers(data);
@@ -52,7 +51,7 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
   const fetchReactions = async (stickerId: number) => {
     try {
       const res = await fetch(
-        `http://localhost:8080/api/v1/reactions/sticker/${stickerId}`,
+        `${API_BASE_URL}/api/v1/reactions/sticker/${stickerId}`,
       );
       if (res.ok) {
         const rData = await res.json();
@@ -67,7 +66,9 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
     if (!activeStickerId || !reactionText) return;
     try {
       const response = await fetch(
-        `http://localhost:8080/api/v1/reactions?stickerId=${activeStickerId}&userId=1&content=${encodeURIComponent(reactionText)}`,
+        `${API_BASE_URL}/api/v1/reactions?stickerId=${activeStickerId}&userId=1&content=${encodeURIComponent(
+          reactionText,
+        )}`,
         {
           method: "POST",
         },
