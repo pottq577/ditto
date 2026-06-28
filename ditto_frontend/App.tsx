@@ -1,11 +1,19 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';
+import { useState } from 'react';
 import { CameraPage } from './src/pages/camera/ui/CameraPage';
+import { MergedViewPage } from './src/pages/merged/ui/MergedViewPage';
 
 export default function App() {
+  const [currentPage, setCurrentPage] = useState<'camera' | 'merged'>('camera');
+
   return (
     <View style={styles.container}>
-      <CameraPage />
+      {currentPage === 'camera' ? (
+        <CameraPage onComplete={() => setCurrentPage('merged')} />
+      ) : (
+        <MergedViewPage onBack={() => setCurrentPage('camera')} />
+      )}
       <StatusBar style="auto" />
     </View>
   );
@@ -14,6 +22,6 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#000',
   },
 });
