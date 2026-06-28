@@ -46,9 +46,8 @@ public class ReactionService {
 
     @Transactional(readOnly = true)
     public List<ReactionResponseDto> getReactions(Long stickerId) {
-        return reactionRepository.findByStickerId(stickerId).stream()
-                .map(r -> new ReactionResponseDto(r.getId(), r.getSticker().getId(), r.getUser().getId(),
-                        r.getContent()))
+        return reactionRepository.findByStickerIdOrderByCreatedAtAsc(stickerId).stream()
+                .map(r -> new ReactionResponseDto(r.getId(), r.getSticker().getId(), r.getUser().getId(), r.getContent()))
                 .collect(Collectors.toList());
     }
 }
