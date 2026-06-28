@@ -10,6 +10,13 @@ import {
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as FileSystem from "expo-file-system";
 import imglyRemoveBackground, { Config } from "@imgly/background-removal";
+import { Logger } from "../../../shared/lib/logger";
+import {
+  colors,
+  spacing,
+  typography,
+  globalStyles,
+} from "../../../shared/theme/theme";
 
 export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
   const [permission, requestPermission] = useCameraPermissions();
@@ -44,7 +51,7 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
           processImage(photo.uri);
         }
       } catch (error) {
-        console.error("카메라 촬영 실패:", error);
+        Logger.error("카메라 촬영 실패:", error);
       }
     }
   };
@@ -61,7 +68,7 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
         publicPath:
           "https://static.imgly.com/@imgly/background-removal-data/1.4.3/dist/",
         progress: (key, current, total) => {
-          console.log(`Downloading ${key}: ${current}/${total}`);
+          Logger.info(`Downloading ${key}: ${current}/${total}`);
         },
       };
 
@@ -87,7 +94,7 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
       };
       reader.readAsDataURL(resultBlob);
     } catch (error) {
-      console.error("누끼 처리 실패:", error);
+      Logger.error("누끼 처리 실패:", error);
       setIsProcessing(false);
     }
   };
@@ -119,7 +126,7 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
         alert("전송 실패");
       }
     } catch (error) {
-      console.error("업로드 에러:", error);
+      Logger.error("업로드 에러:", error);
       alert("업로드 중 오류 발생");
     } finally {
       setIsProcessing(false);
@@ -184,14 +191,12 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: "#000",
-    justifyContent: "center",
-    alignItems: "center",
+    ...globalStyles.container,
+    ...globalStyles.center,
   },
   text: {
-    color: "#fff",
-    marginBottom: 20,
+    color: colors.text,
+    marginBottom: spacing.lg,
   },
   camera: {
     flex: 1,
@@ -202,13 +207,13 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     justifyContent: "flex-end",
     alignItems: "center",
-    paddingBottom: 40,
+    paddingBottom: spacing.xl,
   },
   captureBtn: {
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: "rgba(255,255,255,0.3)",
+    backgroundColor: colors.overlay,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -216,7 +221,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#fff",
+    backgroundColor: colors.text,
   },
   preview: {
     flex: 1,
@@ -224,23 +229,22 @@ const styles = StyleSheet.create({
   },
   actionRow: {
     position: "absolute",
-    bottom: 40,
+    bottom: spacing.xl,
     flexDirection: "row",
-    gap: 20,
+    gap: spacing.lg,
   },
   button: {
-    backgroundColor: "#333",
+    backgroundColor: colors.surfaceOverlay,
     paddingVertical: 15,
     paddingHorizontal: 25,
     borderRadius: 10,
   },
   sendButton: {
-    backgroundColor: "#4A90E2",
+    backgroundColor: colors.primary,
   },
   buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
+    color: colors.text,
+    ...typography.buttonText,
   },
   loader: {
     position: "absolute",

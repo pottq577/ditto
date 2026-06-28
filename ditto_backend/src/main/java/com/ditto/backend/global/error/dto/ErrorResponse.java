@@ -1,11 +1,13 @@
 package com.ditto.backend.global.error.dto;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.ditto.backend.global.error.exception.ErrorCode;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -33,7 +35,7 @@ public class ErrorResponse {
     public static ErrorResponse of(final ErrorCode code) {
         return new ErrorResponse(code);
     }
-    
+
     @Getter
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
     public static class FieldError {

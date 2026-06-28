@@ -1,8 +1,9 @@
 package com.ditto.backend.global.error.exception;
 
+import org.springframework.http.HttpStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor
@@ -16,7 +17,7 @@ public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "User is not found"),
     COUPLE_NOT_FOUND(HttpStatus.NOT_FOUND, "C004", "Couple is not found"),
     STICKER_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "Sticker is not found"),
-    
+
     // 파일 및 외부 연동
     FILE_UPLOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "F001", "File upload failed");
 

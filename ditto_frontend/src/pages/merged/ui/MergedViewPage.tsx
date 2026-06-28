@@ -9,6 +9,13 @@ import {
   TextInput,
   Button,
 } from "react-native";
+import { Logger } from "../../../shared/lib/logger";
+import {
+  colors,
+  spacing,
+  typography,
+  globalStyles,
+} from "../../../shared/theme/theme";
 
 interface Sticker {
   id: number;
@@ -42,7 +49,7 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
         data.forEach((s) => fetchReactions(s.id));
       }
     } catch (error) {
-      console.error("스티커 조회 실패:", error);
+      Logger.error("스티커 조회 실패:", error);
     } finally {
       setLoading(false);
     }
@@ -58,7 +65,7 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
         setReactions((prev) => ({ ...prev, [stickerId]: rData }));
       }
     } catch (error) {
-      console.error("리액션 조회 실패:", error);
+      Logger.error("리액션 조회 실패:", error);
     }
   };
 
@@ -77,7 +84,7 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
         fetchReactions(activeStickerId);
       }
     } catch (e) {
-      console.error("리액션 전송 실패", e);
+      Logger.error("리액션 전송 실패", e);
     }
   };
 
@@ -161,35 +168,33 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: "#000",
+    ...globalStyles.container,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: 50,
-    paddingHorizontal: 20,
-    paddingBottom: 10,
-    backgroundColor: "#111",
+    paddingTop: spacing.xxl,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+    backgroundColor: colors.surface,
   },
   headerTitle: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
+    color: colors.text,
+    ...typography.headerTitle,
   },
   headerBtn: {
-    color: "#4A90E2",
-    fontSize: 16,
+    color: colors.primary,
+    ...typography.buttonText,
   },
   canvas: {
     flex: 1,
     alignItems: "center",
     position: "relative",
-    marginTop: 50,
+    marginTop: spacing.xxl,
   },
   emptyText: {
-    color: "#aaa",
+    color: colors.textMuted,
     marginTop: 100,
   },
   stickerWrapper: {
@@ -203,31 +208,31 @@ const styles = StyleSheet.create({
   },
   bubble: {
     position: "absolute",
-    backgroundColor: "rgba(255,255,255,0.9)",
-    padding: 8,
+    backgroundColor: colors.bubbleBackground,
+    padding: spacing.sm,
     borderRadius: 15,
     maxWidth: 150,
   },
   bubbleText: {
-    color: "#000",
-    fontSize: 14,
+    color: colors.bubbleText,
+    ...typography.bodyText,
   },
   reactionInputContainer: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "#222",
-    padding: 20,
+    backgroundColor: colors.surfaceLight,
+    padding: spacing.lg,
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: spacing.sm,
   },
   input: {
     flex: 1,
-    backgroundColor: "#444",
-    color: "#fff",
-    padding: 10,
+    backgroundColor: colors.surfaceOverlay,
+    color: colors.text,
+    padding: spacing.sm,
     borderRadius: 8,
   },
 });
