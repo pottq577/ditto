@@ -33,9 +33,10 @@ export const styles = StyleSheet.create({
     marginTop: 100,
   },
   stickerWrapper: {
-    position: 'absolute',
     width: 250,
     height: 250,
+    marginBottom: 40,
+    alignSelf: 'center',
   },
   stickerImage: {
     width: '100%',

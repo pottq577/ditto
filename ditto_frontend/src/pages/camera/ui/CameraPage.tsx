@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as FileSystem from "expo-file-system/legacy";
@@ -78,7 +79,7 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
           }
 
           const filename = `nucci_${Date.now()}.png`;
-          const destPath = `${FileSystem.documentDirectory}${filename}`;
+          const destPath = `${FileSystem.cacheDirectory}${filename}`;
           const base64Code = reader.result.split(",")[1];
 
           if (!base64Code) {
@@ -92,23 +93,26 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
           setPhotoUri(destPath);
         } catch (error) {
           Logger.error("누끼 저장 실패:", error);
+          Alert.alert("오류", "이미지 처리에 실패했습니다.");
         } finally {
           setIsProcessing(false);
         }
       };
       reader.onerror = () => {
         Logger.error("누끼 읽기 실패");
+        Alert.alert("오류", "이미지를 읽는데 실패했습니다.");
         setIsProcessing(false);
       };
       reader.readAsDataURL(resultBlob);
     } catch (error) {
       Logger.error("누끼 처리 실패:", error);
+      Alert.alert("오류", "배경 제거 중 오류가 발생했습니다.");
       setIsProcessing(false);
     }
   };
 
   const sendSticker = async () => {
-    if (!photoUri) return;
+    if (!photoUri || isProcessing) return;
     setIsProcessing(true);
     try {
       const formData = new FormData();
@@ -128,14 +132,22 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
       });
 
       if (response.ok) {
-        alert("전송 완료!");
+        Alert.alert("성공", "전송 완료!");
+        
+        // 업로드 성공 후 캐시 파일 삭제 (선택적)
+        try {
+           await FileSystem.deleteAsync(photoUri, { idempotent: true });
+        } catch (e) {
+           Logger.error("캐시 파일 삭제 실패", e);
+        }
+
         onComplete();
       } else {
-        alert("전송 실패");
+        Alert.alert("실패", "전송에 실패했습니다.");
       }
     } catch (error) {
       Logger.error("업로드 에러:", error);
-      alert("업로드 중 오류 발생");
+      Alert.alert("오류", "업로드 중 오류가 발생했습니다.");
     } finally {
       setIsProcessing(false);
     }
