@@ -31,6 +31,12 @@ public class Couple {
 
     @Builder
     public Couple(User user1, User user2) {
+        if (user1 == null || user2 == null) {
+            throw new IllegalArgumentException("Both users are required");
+        }
+        if (user1 == user2 || (user1.getId() != null && user1.getId().equals(user2.getId()))) {
+            throw new IllegalArgumentException("A couple must contain two distinct users");
+        }
         this.user1 = user1;
         this.user2 = user2;
         this.connectedAt = LocalDateTime.now();
