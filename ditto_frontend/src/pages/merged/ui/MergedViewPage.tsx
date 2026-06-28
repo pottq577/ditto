@@ -1,5 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, Image, ActivityIndicator, TouchableOpacity, TextInput, Button } from 'react-native';
+import React, { useEffect, useState } from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  ActivityIndicator,
+  TouchableOpacity,
+  TextInput,
+  Button,
+} from "react-native";
 
 interface Sticker {
   id: number;
@@ -18,20 +27,22 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
   const [reactions, setReactions] = useState<Record<number, Reaction[]>>({});
   const [loading, setLoading] = useState(true);
   const [activeStickerId, setActiveStickerId] = useState<number | null>(null);
-  const [reactionText, setReactionText] = useState('');
+  const [reactionText, setReactionText] = useState("");
 
   const fetchStickers = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/v1/stickers/couple/1');
+      const response = await fetch(
+        "http://localhost:8080/api/v1/stickers/couple/1",
+      );
       if (response.ok) {
         const data: Sticker[] = await response.json();
         setStickers(data);
-        
+
         // Fetch reactions for each sticker
-        data.forEach(s => fetchReactions(s.id));
+        data.forEach((s) => fetchReactions(s.id));
       }
     } catch (error) {
-      console.error('스티커 조회 실패:', error);
+      console.error("스티커 조회 실패:", error);
     } finally {
       setLoading(false);
     }
@@ -39,29 +50,34 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
 
   const fetchReactions = async (stickerId: number) => {
     try {
-      const res = await fetch(`http://localhost:8080/api/v1/reactions/sticker/${stickerId}`);
+      const res = await fetch(
+        `http://localhost:8080/api/v1/reactions/sticker/${stickerId}`,
+      );
       if (res.ok) {
         const rData = await res.json();
-        setReactions(prev => ({ ...prev, [stickerId]: rData }));
+        setReactions((prev) => ({ ...prev, [stickerId]: rData }));
       }
     } catch (error) {
-      console.error('리액션 조회 실패:', error);
+      console.error("리액션 조회 실패:", error);
     }
   };
 
   const submitReaction = async () => {
     if (!activeStickerId || !reactionText) return;
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/reactions?stickerId=${activeStickerId}&userId=1&content=${encodeURIComponent(reactionText)}`, {
-        method: 'POST'
-      });
+      const response = await fetch(
+        `http://localhost:8080/api/v1/reactions?stickerId=${activeStickerId}&userId=1&content=${encodeURIComponent(reactionText)}`,
+        {
+          method: "POST",
+        },
+      );
       if (response.ok) {
-        setReactionText('');
+        setReactionText("");
         setActiveStickerId(null);
         fetchReactions(activeStickerId);
       }
     } catch (e) {
-      console.error('리액션 전송 실패', e);
+      console.error("리액션 전송 실패", e);
     }
   };
 
@@ -94,15 +110,25 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
           <Text style={styles.emptyText}>아직 업로드된 스티커가 없습니다.</Text>
         ) : (
           stickers.map((s, index) => (
-            <TouchableOpacity 
-              key={s.id} 
-              style={[styles.stickerWrapper, { zIndex: index, top: index * 200 }]}
+            <TouchableOpacity
+              key={s.id}
+              style={[
+                styles.stickerWrapper,
+                { zIndex: index, top: index * 200 },
+              ]}
               onPress={() => setActiveStickerId(s.id)}
             >
-              <Image source={{ uri: s.imageUrl }} style={styles.stickerImage} resizeMode="contain" />
+              <Image
+                source={{ uri: s.imageUrl }}
+                style={styles.stickerImage}
+                resizeMode="contain"
+              />
               {/* 말풍선 렌더링 */}
               {reactions[s.id]?.map((r, rIdx) => (
-                <View key={r.id} style={[styles.bubble, { right: -50, top: rIdx * 40 }]}>
+                <View
+                  key={r.id}
+                  style={[styles.bubble, { right: -50, top: rIdx * 40 }]}
+                >
                   <Text style={styles.bubbleText}>{r.content}</Text>
                 </View>
               ))}
@@ -122,7 +148,11 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
             onChangeText={setReactionText}
           />
           <Button title="작성" onPress={submitReaction} color="#4A90E2" />
-          <Button title="취소" onPress={() => setActiveStickerId(null)} color="#999" />
+          <Button
+            title="취소"
+            onPress={() => setActiveStickerId(null)}
+            color="#999"
+          />
         </View>
       )}
     </View>
@@ -132,72 +162,72 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: "#000",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingTop: 50,
     paddingHorizontal: 20,
     paddingBottom: 10,
-    backgroundColor: '#111',
+    backgroundColor: "#111",
   },
   headerTitle: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   headerBtn: {
-    color: '#4A90E2',
+    color: "#4A90E2",
     fontSize: 16,
   },
   canvas: {
     flex: 1,
-    alignItems: 'center',
-    position: 'relative',
+    alignItems: "center",
+    position: "relative",
     marginTop: 50,
   },
   emptyText: {
-    color: '#aaa',
+    color: "#aaa",
     marginTop: 100,
   },
   stickerWrapper: {
-    position: 'absolute',
+    position: "absolute",
     width: 250,
     height: 250,
   },
   stickerImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   bubble: {
-    position: 'absolute',
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    position: "absolute",
+    backgroundColor: "rgba(255,255,255,0.9)",
     padding: 8,
     borderRadius: 15,
     maxWidth: 150,
   },
   bubbleText: {
-    color: '#000',
+    color: "#000",
     fontSize: 14,
   },
   reactionInputContainer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#222',
+    backgroundColor: "#222",
     padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
   },
   input: {
     flex: 1,
-    backgroundColor: '#444',
-    color: '#fff',
+    backgroundColor: "#444",
+    color: "#fff",
     padding: 10,
     borderRadius: 8,
-  }
+  },
 });

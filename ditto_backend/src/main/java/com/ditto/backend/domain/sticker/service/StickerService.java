@@ -1,5 +1,13 @@
 package com.ditto.backend.domain.sticker.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.ditto.backend.domain.couple.entity.Couple;
 import com.ditto.backend.domain.couple.repository.CoupleRepository;
 import com.ditto.backend.domain.sticker.dto.StickerResponseDto;
@@ -8,13 +16,8 @@ import com.ditto.backend.domain.sticker.repository.StickerRepository;
 import com.ditto.backend.domain.user.entity.User;
 import com.ditto.backend.domain.user.repository.UserRepository;
 import com.ditto.backend.global.infra.s3.MockS3Uploader;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

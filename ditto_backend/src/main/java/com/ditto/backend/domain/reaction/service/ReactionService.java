@@ -1,5 +1,11 @@
 package com.ditto.backend.domain.reaction.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ditto.backend.domain.reaction.dto.ReactionResponseDto;
 import com.ditto.backend.domain.reaction.entity.Reaction;
 import com.ditto.backend.domain.reaction.repository.ReactionRepository;
@@ -7,11 +13,8 @@ import com.ditto.backend.domain.sticker.entity.Sticker;
 import com.ditto.backend.domain.sticker.repository.StickerRepository;
 import com.ditto.backend.domain.user.entity.User;
 import com.ditto.backend.domain.user.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -40,7 +43,8 @@ public class ReactionService {
     @Transactional(readOnly = true)
     public List<ReactionResponseDto> getReactions(Long stickerId) {
         return reactionRepository.findByStickerId(stickerId).stream()
-                .map(r -> new ReactionResponseDto(r.getId(), r.getSticker().getId(), r.getUser().getId(), r.getContent()))
+                .map(r -> new ReactionResponseDto(r.getId(), r.getSticker().getId(), r.getUser().getId(),
+                        r.getContent()))
                 .collect(Collectors.toList());
     }
 }
