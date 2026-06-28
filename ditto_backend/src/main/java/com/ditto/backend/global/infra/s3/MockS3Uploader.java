@@ -19,13 +19,26 @@ public class MockS3Uploader {
             if (!dir.exists()) {
                 dir.mkdirs();
             }
-            String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            String originalFilename = file.getOriginalFilename();
+            if (originalFilename == null) {
+                originalFilename = "unknown";
+            }
+            String cleanFilename = Paths.get(originalFilename).getFileName().toString();
+            String filename = System.currentTimeMillis() + "_" + cleanFilename;
             Path filePath = Paths.get(UPLOAD_DIR, filename);
-            Files.write(filePath, file.getBytes());
+
+            Path uploadDirPath = Paths.get(UPLOAD_DIR).toAbsolutePath().normalize();
+            Path targetPath = filePath.toAbsolutePath().normalize();
+
+            if (!targetPath.startsWith(uploadDirPath)) {
+                throw new com.ditto.backend.global.error.exception.BusinessException(com.ditto.backend.global.error.exception.ErrorCode.FILE_UPLOAD_ERROR);
+            }
+
+            Files.write(targetPath, file.getBytes());
             // 반환은 로컬 정적 리소스 경로로
             return "http://localhost:8080/uploads/" + filename;
         } catch (IOException e) {
-            throw new RuntimeException("Mock S3 upload failed", e);
+            throw new com.ditto.backend.global.error.exception.BusinessException(com.ditto.backend.global.error.exception.ErrorCode.FILE_UPLOAD_ERROR);
         }
     }
 }
