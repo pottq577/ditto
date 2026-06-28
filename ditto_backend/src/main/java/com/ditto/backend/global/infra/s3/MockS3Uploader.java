@@ -1,16 +1,31 @@
 package com.ditto.backend.global.infra.s3;
 
-import java.util.UUID;
-
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
-@Component
+@Service
 public class MockS3Uploader {
+    private static final String UPLOAD_DIR = "uploads/";
 
-    // MVP 용 가짜 S3 업로더: S3 URL 형식의 더미 문자열 반환
     public String upload(MultipartFile file) {
-        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-        return "https://mock-s3-bucket.s3.ap-northeast-2.amazonaws.com/" + fileName;
+        if (file.isEmpty()) return null;
+        try {
+            File dir = new File(UPLOAD_DIR);
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+            String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            Path filePath = Paths.get(UPLOAD_DIR, filename);
+            Files.write(filePath, file.getBytes());
+            // 반환은 로컬 정적 리소스 경로로
+            return "http://localhost:8080/uploads/" + filename;
+        } catch (IOException e) {
+            throw new RuntimeException("Mock S3 upload failed", e);
+        }
     }
 }
