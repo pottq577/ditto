@@ -13,6 +13,8 @@ import com.ditto.backend.domain.sticker.entity.Sticker;
 import com.ditto.backend.domain.sticker.repository.StickerRepository;
 import com.ditto.backend.domain.user.entity.User;
 import com.ditto.backend.domain.user.repository.UserRepository;
+import com.ditto.backend.global.error.exception.BusinessException;
+import com.ditto.backend.global.error.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,8 +28,10 @@ public class ReactionService {
 
     @Transactional
     public ReactionResponseDto addReaction(Long stickerId, Long userId, String content) {
-        Sticker sticker = stickerRepository.findById(stickerId).orElseThrow();
-        User user = userRepository.findById(userId).orElseThrow();
+        Sticker sticker = stickerRepository.findById(stickerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STICKER_NOT_FOUND));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         Reaction reaction = Reaction.builder()
                 .sticker(sticker)

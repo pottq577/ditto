@@ -15,6 +15,8 @@ import com.ditto.backend.domain.sticker.entity.Sticker;
 import com.ditto.backend.domain.sticker.repository.StickerRepository;
 import com.ditto.backend.domain.user.entity.User;
 import com.ditto.backend.domain.user.repository.UserRepository;
+import com.ditto.backend.global.error.exception.BusinessException;
+import com.ditto.backend.global.error.exception.ErrorCode;
 import com.ditto.backend.global.infra.s3.MockS3Uploader;
 
 import lombok.RequiredArgsConstructor;
@@ -30,8 +32,10 @@ public class StickerService {
 
     @Transactional
     public StickerResponseDto uploadSticker(Long userId, Long coupleId, MultipartFile file) {
-        User user = userRepository.findById(userId).orElseThrow();
-        Couple couple = coupleRepository.findById(coupleId).orElseThrow();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        Couple couple = coupleRepository.findById(coupleId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.COUPLE_NOT_FOUND));
 
         String imageUrl = s3Uploader.upload(file);
 
