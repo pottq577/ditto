@@ -14,6 +14,7 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "C003", "Server Error"),
 
     // 엔티티 관련
+    FORBIDDEN(HttpStatus.FORBIDDEN, "C005", "Access is denied"),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "User is not found"),
     COUPLE_NOT_FOUND(HttpStatus.NOT_FOUND, "C004", "Couple is not found"),
     STICKER_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "Sticker is not found"),

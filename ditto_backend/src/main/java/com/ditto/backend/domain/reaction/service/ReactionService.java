@@ -30,8 +30,13 @@ public class ReactionService {
     public ReactionResponseDto addReaction(Long stickerId, Long userId, String content) {
         Sticker sticker = stickerRepository.findById(stickerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STICKER_NOT_FOUND));
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        
+        com.ditto.backend.domain.couple.entity.Couple couple = sticker.getCouple();
+        if (!couple.getUser1().getId().equals(userId) && !couple.getUser2().getId().equals(userId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+
+        User user = userRepository.getReferenceById(userId);
 
         Reaction reaction = Reaction.builder()
                 .sticker(sticker)

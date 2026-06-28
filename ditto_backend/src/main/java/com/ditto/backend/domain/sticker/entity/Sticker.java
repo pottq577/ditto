@@ -54,6 +54,6 @@ public class Sticker {
         this.user = user;
         this.couple = couple;
         this.imageUrl = imageUrl;
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = java.time.LocalDateTime.now(java.time.ZoneId.of("Asia/Seoul"));
     }
 }

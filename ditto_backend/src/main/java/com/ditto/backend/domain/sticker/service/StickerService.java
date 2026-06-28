@@ -33,10 +33,14 @@ public class StickerService {
 
     @Transactional
     public StickerResponseDto uploadSticker(Long userId, Long coupleId, MultipartFile file) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         Couple couple = coupleRepository.findById(coupleId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.COUPLE_NOT_FOUND));
+
+        if (!couple.getUser1().getId().equals(userId) && !couple.getUser2().getId().equals(userId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+
+        User user = userRepository.getReferenceById(userId);
 
         String imageUrl = s3Uploader.upload(file);
 

@@ -54,6 +54,6 @@ public class Reaction {
         this.sticker = sticker;
         this.user = user;
         this.content = content;
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = java.time.LocalDateTime.now(java.time.ZoneId.of("Asia/Seoul"));
     }
 }
