@@ -71,19 +71,32 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
       // 3. Convert result blob to base64 or save it
       const reader = new FileReader();
       reader.onloadend = async () => {
-        const base64data = reader.result as string;
+        try {
+          if (typeof reader.result !== "string") {
+            throw new Error("Failed to read processed image");
+          }
 
-        // Save to FileSystem
-        const filename = `nucci_${Date.now()}.png`;
-        const destPath = `${FileSystem.documentDirectory}${filename}`;
+          const filename = `nucci_${Date.now()}.png`;
+          const destPath = `${FileSystem.documentDirectory}${filename}`;
+          const base64Code = reader.result.split(",")[1];
 
-        // Save base64 string (strip the data prefix)
-        const base64Code = base64data.split(",")[1];
-        await FileSystem.writeAsStringAsync(destPath, base64Code, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
+          if (!base64Code) {
+            throw new Error("Failed to extract image payload");
+          }
 
-        setPhotoUri(destPath);
+          await FileSystem.writeAsStringAsync(destPath, base64Code, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+
+          setPhotoUri(destPath);
+        } catch (error) {
+          Logger.error("누끼 저장 실패:", error);
+        } finally {
+          setIsProcessing(false);
+        }
+      };
+      reader.onerror = () => {
+        Logger.error("누끼 읽기 실패");
         setIsProcessing(false);
       };
       reader.readAsDataURL(resultBlob);
