@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,7 +45,21 @@ public class StickerService {
 
     @Transactional(readOnly = true)
     public List<StickerResponseDto> getCoupleStickers(Long coupleId) {
-        return stickerRepository.findByCoupleId(coupleId).stream()
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime start;
+        LocalDateTime end;
+
+        if (now.getHour() < 6) {
+            // 오전 6시 이전이면 어제 오전 6시부터 오늘 오전 6시까지
+            start = now.minusDays(1).withHour(6).withMinute(0).withSecond(0).withNano(0);
+            end = now.withHour(6).withMinute(0).withSecond(0).withNano(0);
+        } else {
+            // 오전 6시 이후면 오늘 오전 6시부터 내일 오전 6시까지
+            start = now.withHour(6).withMinute(0).withSecond(0).withNano(0);
+            end = now.plusDays(1).withHour(6).withMinute(0).withSecond(0).withNano(0);
+        }
+
+        return stickerRepository.findByCoupleIdAndCreatedAtBetween(coupleId, start, end).stream()
                 .map(s -> new StickerResponseDto(s.getId(), s.getImageUrl(), s.getUser().getId()))
                 .collect(Collectors.toList());
     }
