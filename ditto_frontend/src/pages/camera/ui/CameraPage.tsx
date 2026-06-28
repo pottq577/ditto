@@ -7,8 +7,8 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
-import * as FileSystem from "expo-file-system";
-import imglyRemoveBackground, { Config } from "@imgly/background-removal";
+import * as FileSystem from "expo-file-system/legacy";
+import { removeBackground, Config } from "@imgly/background-removal";
 import { Logger } from "../../../shared/lib/logger";
 import { styles } from './CameraPage.styles';
 import { API_BASE_URL } from "../../../shared/api/api";
@@ -67,7 +67,7 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
         },
       };
 
-      const resultBlob = await imglyRemoveBackground(blob, config);
+      const resultBlob = await removeBackground(blob, config);
 
       // 3. Convert result blob to base64 or save it
       const reader = new FileReader();
