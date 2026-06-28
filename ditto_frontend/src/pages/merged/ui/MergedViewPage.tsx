@@ -65,14 +65,17 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
   const submitReaction = async () => {
     if (!activeStickerId || !reactionText) return;
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/reactions?stickerId=${activeStickerId}&userId=1&content=${encodeURIComponent(
-          reactionText,
-        )}`,
-        {
-          method: "POST",
+      const response = await fetch(`${API_BASE_URL}/api/v1/reactions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-User-Id": "1",
         },
-      );
+        body: JSON.stringify({
+          stickerId: activeStickerId,
+          content: reactionText,
+        }),
+      });
       if (response.ok) {
         setReactionText("");
         setActiveStickerId(null);

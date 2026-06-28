@@ -119,8 +119,11 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
       } as any);
 
       // 더미 데이터: userId=1, coupleId=1
-      const response = await fetch(`${API_BASE_URL}/api/v1/stickers?userId=1&coupleId=1`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/stickers?coupleId=1`, {
         method: "POST",
+        headers: {
+          "X-User-Id": "1",
+        },
         body: formData,
       });
 
