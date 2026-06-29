@@ -1,5 +1,10 @@
-import { StyleSheet } from 'react-native';
-import { colors, spacing, typography, globalStyles } from '../../../shared/theme/theme';
+import { StyleSheet } from "react-native";
+import {
+  colors,
+  spacing,
+  typography,
+  globalStyles,
+} from "../../../shared/theme/theme";
 
 export const styles = StyleSheet.create({
   container: {
@@ -12,13 +17,13 @@ export const styles = StyleSheet.create({
   },
   camera: {
     flex: 1,
-    width: '100%',
+    width: "100%",
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'transparent',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
+    backgroundColor: "transparent",
+    justifyContent: "flex-end",
+    alignItems: "center",
     paddingBottom: spacing.xl,
   },
   captureBtn: {
@@ -26,8 +31,8 @@ export const styles = StyleSheet.create({
     height: 70,
     borderRadius: 35,
     backgroundColor: colors.overlay,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   captureInner: {
     width: 60,
@@ -37,12 +42,12 @@ export const styles = StyleSheet.create({
   },
   preview: {
     flex: 1,
-    width: '100%',
+    width: "100%",
   },
   actionRow: {
-    position: 'absolute',
+    position: "absolute",
     bottom: spacing.xl,
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.lg,
   },
   button: {
@@ -59,6 +64,6 @@ export const styles = StyleSheet.create({
     ...typography.buttonText,
   },
   loader: {
-    position: 'absolute',
-  }
+    position: "absolute",
+  },
 });

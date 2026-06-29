@@ -11,22 +11,19 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Index;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(
-    name = "reactions",
-    indexes = {
+@Table(name = "reactions", indexes = {
         @Index(name = "idx_reactions_sticker_created_at", columnList = "sticker_id, created_at")
-    }
-)
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Reaction {

@@ -40,9 +40,12 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
   const fetchStickers = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/stickers/couple/${coupleId || 1}`, {
-        headers: { "X-User-Id": userId || "1" }
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/stickers/couple/${coupleId || 1}`,
+        {
+          headers: { "X-User-Id": userId || "1" },
+        },
+      );
       if (response.ok) {
         const data: Sticker[] = await response.json();
         setStickers(data);
@@ -51,9 +54,12 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
         const reactionsData = await Promise.all(
           data.map(async (s) => {
             try {
-              const res = await fetch(`${API_BASE_URL}/api/v1/reactions/sticker/${s.id}`, {
-                headers: { "X-User-Id": userId || "1" }
-              });
+              const res = await fetch(
+                `${API_BASE_URL}/api/v1/reactions/sticker/${s.id}`,
+                {
+                  headers: { "X-User-Id": userId || "1" },
+                },
+              );
               if (res.ok) {
                 return { id: s.id, data: await res.json() };
               }
@@ -61,9 +67,9 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
               Logger.error(`리액션 조회 실패 (sticker: ${s.id})`, e);
             }
             return null;
-          })
+          }),
         );
-        
+
         const newReactions: Record<number, Reaction[]> = {};
         reactionsData.forEach((result) => {
           if (result) newReactions[result.id] = result.data;
@@ -82,9 +88,12 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
 
   const fetchSingleReaction = async (stickerId: number) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/v1/reactions/sticker/${stickerId}`, {
-        headers: { "X-User-Id": userId || "1" }
-      });
+      const res = await fetch(
+        `${API_BASE_URL}/api/v1/reactions/sticker/${stickerId}`,
+        {
+          headers: { "X-User-Id": userId || "1" },
+        },
+      );
       if (res.ok) {
         const rData = await res.json();
         setReactions((prev) => ({ ...prev, [stickerId]: rData }));
@@ -129,28 +138,31 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
     fetchStickers();
   }, []);
 
-  const renderItem: ListRenderItem<Sticker> = useCallback(({ item: s }) => {
-    return (
-      <TouchableOpacity
-        style={styles.stickerWrapper}
-        onPress={() => setActiveStickerId(s.id)}
-      >
-        <Image
-          source={{ uri: s.imageUrl }}
-          style={styles.stickerImage}
-          resizeMode="contain"
-        />
-        {reactions[s.id]?.map((r, rIdx) => (
-          <View
-            key={r.id}
-            style={[styles.bubble, { right: -50, top: rIdx * 40 }]}
-          >
-            <Text style={styles.bubbleText}>{r.content}</Text>
-          </View>
-        ))}
-      </TouchableOpacity>
-    );
-  }, [reactions]);
+  const renderItem: ListRenderItem<Sticker> = useCallback(
+    ({ item: s }) => {
+      return (
+        <TouchableOpacity
+          style={styles.stickerWrapper}
+          onPress={() => setActiveStickerId(s.id)}
+        >
+          <Image
+            source={{ uri: s.imageUrl }}
+            style={styles.stickerImage}
+            resizeMode="contain"
+          />
+          {reactions[s.id]?.map((r, rIdx) => (
+            <View
+              key={r.id}
+              style={[styles.bubble, { right: -50, top: rIdx * 40 }]}
+            >
+              <Text style={styles.bubbleText}>{r.content}</Text>
+            </View>
+          ))}
+        </TouchableOpacity>
+      );
+    },
+    [reactions],
+  );
 
   const ListEmptyComponent = () => (
     <Text style={styles.emptyText}>아직 업로드된 스티커가 없습니다.</Text>
@@ -170,7 +182,11 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
 
       <View style={styles.canvas}>
         {loading ? (
-          <ActivityIndicator size="large" color="#ffffff" style={{ marginTop: 100 }} />
+          <ActivityIndicator
+            size="large"
+            color="#ffffff"
+            style={{ marginTop: 100 }}
+          />
         ) : (
           <FlatList
             data={stickers}
@@ -193,11 +209,11 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
             onChangeText={setReactionText}
             editable={!isSubmitting}
           />
-          <Button 
-            title={isSubmitting ? "전송중..." : "작성"} 
-            onPress={submitReaction} 
-            color="#4A90E2" 
-            disabled={isSubmitting} 
+          <Button
+            title={isSubmitting ? "전송중..." : "작성"}
+            onPress={submitReaction}
+            color="#4A90E2"
+            disabled={isSubmitting}
           />
           <Button
             title="취소"

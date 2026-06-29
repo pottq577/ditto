@@ -31,7 +31,7 @@ public class ReactionService {
     public ReactionResponseDto addReaction(Long stickerId, Long userId, String content) {
         Sticker sticker = stickerRepository.findById(stickerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STICKER_NOT_FOUND));
-        
+
         Couple couple = sticker.getCouple();
         if (!couple.getUser1().getId().equals(userId) && !couple.getUser2().getId().equals(userId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN);
@@ -54,14 +54,15 @@ public class ReactionService {
     public List<ReactionResponseDto> getReactions(Long stickerId, Long userId) {
         Sticker sticker = stickerRepository.findById(stickerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STICKER_NOT_FOUND));
-        
+
         Couple couple = sticker.getCouple();
         if (!couple.getUser1().getId().equals(userId) && !couple.getUser2().getId().equals(userId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN);
         }
 
         return reactionRepository.findByStickerIdOrderByCreatedAtAsc(stickerId).stream()
-                .map(r -> new ReactionResponseDto(r.getId(), r.getSticker().getId(), r.getUser().getId(), r.getContent()))
+                .map(r -> new ReactionResponseDto(r.getId(), r.getSticker().getId(), r.getUser().getId(),
+                        r.getContent()))
                 .collect(Collectors.toList());
     }
 }

@@ -79,7 +79,8 @@ public class StickerService {
             end = now.plusDays(1).withHour(6).withMinute(0).withSecond(0).withNano(0);
         }
 
-        return stickerRepository.findByCoupleIdAndCreatedAtGreaterThanEqualAndCreatedAtLessThan(coupleId, start, end).stream()
+        return stickerRepository.findByCoupleIdAndCreatedAtGreaterThanEqualAndCreatedAtLessThan(coupleId, start, end)
+                .stream()
                 .map(s -> new StickerResponseDto(s.getId(), s.getImageUrl(), s.getUser().getId()))
                 .collect(Collectors.toList());
     }

@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import com.ditto.backend.global.auth.LoginUser;
@@ -35,7 +34,8 @@ public class ReactionController {
     }
 
     @GetMapping("/sticker/{stickerId}")
-    public ResponseEntity<List<ReactionResponseDto>> getReactions(@PathVariable Long stickerId, @LoginUser Long userId) {
+    public ResponseEntity<List<ReactionResponseDto>> getReactions(@PathVariable Long stickerId,
+            @LoginUser Long userId) {
         return ResponseEntity.ok(reactionService.getReactions(stickerId, userId));
     }
 }

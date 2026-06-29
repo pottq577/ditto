@@ -1,14 +1,19 @@
-import { StyleSheet } from 'react-native';
-import { colors, spacing, typography, globalStyles } from '../../../shared/theme/theme';
+import { StyleSheet } from "react-native";
+import {
+  colors,
+  spacing,
+  typography,
+  globalStyles,
+} from "../../../shared/theme/theme";
 
 export const styles = StyleSheet.create({
   container: {
     ...globalStyles.container,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingTop: spacing.xxl,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
@@ -24,8 +29,8 @@ export const styles = StyleSheet.create({
   },
   canvas: {
     flex: 1,
-    alignItems: 'center',
-    position: 'relative',
+    alignItems: "center",
+    position: "relative",
     marginTop: spacing.xxl,
   },
   emptyText: {
@@ -36,14 +41,14 @@ export const styles = StyleSheet.create({
     width: 250,
     height: 250,
     marginBottom: 40,
-    alignSelf: 'center',
+    alignSelf: "center",
   },
   stickerImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   bubble: {
-    position: 'absolute',
+    position: "absolute",
     backgroundColor: colors.bubbleBackground,
     padding: spacing.sm,
     borderRadius: 15,
@@ -54,14 +59,14 @@ export const styles = StyleSheet.create({
     ...typography.bodyText,
   },
   reactionInputContainer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
     backgroundColor: colors.surfaceLight,
     padding: spacing.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
   },
   input: {
@@ -70,5 +75,5 @@ export const styles = StyleSheet.create({
     color: colors.text,
     padding: spacing.sm,
     borderRadius: 8,
-  }
+  },
 });

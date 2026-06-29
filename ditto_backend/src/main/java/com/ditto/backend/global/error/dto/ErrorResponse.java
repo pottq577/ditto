@@ -3,10 +3,10 @@ package com.ditto.backend.global.error.dto;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.ditto.backend.global.error.exception.ErrorCode;
 import org.springframework.validation.BindingResult;
-
 import org.springframework.validation.FieldError;
+
+import com.ditto.backend.global.error.exception.ErrorCode;
 
 import lombok.AccessLevel;
 import lombok.Getter;

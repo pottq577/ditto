@@ -11,7 +11,7 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import * as FileSystem from "expo-file-system/legacy";
 import { removeBackground, Config } from "@imgly/background-removal";
 import { Logger } from "../../../shared/lib/logger";
-import { styles } from './CameraPage.styles';
+import { styles } from "./CameraPage.styles";
 import { API_BASE_URL } from "../../../shared/api/api";
 import { useAuth } from "../../../shared/lib/AuthContext";
 
@@ -125,22 +125,25 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
         type: "image/png",
       } as any);
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/stickers?coupleId=${coupleId || 1}`, {
-        method: "POST",
-        headers: {
-          "X-User-Id": userId || "1",
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/stickers?coupleId=${coupleId || 1}`,
+        {
+          method: "POST",
+          headers: {
+            "X-User-Id": userId || "1",
+          },
+          body: formData,
         },
-        body: formData,
-      });
+      );
 
       if (response.ok) {
         Alert.alert("성공", "전송 완료!");
-        
+
         // 업로드 성공 후 캐시 파일 삭제 (선택적)
         try {
-           await FileSystem.deleteAsync(photoUri, { idempotent: true });
+          await FileSystem.deleteAsync(photoUri, { idempotent: true });
         } catch (e) {
-           Logger.error("캐시 파일 삭제 실패", e);
+          Logger.error("캐시 파일 삭제 실패", e);
         }
 
         onComplete();

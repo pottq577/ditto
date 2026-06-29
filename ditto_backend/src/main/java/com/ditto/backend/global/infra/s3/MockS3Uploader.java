@@ -1,20 +1,23 @@
 package com.ditto.backend.global.infra.s3;
 
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.ditto.backend.global.error.exception.BusinessException;
 import com.ditto.backend.global.error.exception.ErrorCode;
 
 @Service
 public class MockS3Uploader {
     private static final String UPLOAD_DIR = "uploads/";
-    private static final List<String> ALLOWED_CONTENT_TYPES = List.of("image/jpeg", "image/png", "image/webp", "image/gif");
+    private static final List<String> ALLOWED_CONTENT_TYPES = List.of("image/jpeg", "image/png", "image/webp",
+            "image/gif");
 
     public String upload(MultipartFile file) {
         if (file.isEmpty()) {

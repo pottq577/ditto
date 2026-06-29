@@ -7,6 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.ditto.backend.domain.reaction.entity.Reaction;
 
 public interface ReactionRepository extends JpaRepository<Reaction, Long> {
-    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"user", "sticker"})
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = { "user", "sticker" })
     List<Reaction> findByStickerIdOrderByCreatedAtAsc(Long stickerId);
 }
