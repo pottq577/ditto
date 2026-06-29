@@ -16,7 +16,8 @@
     },
     "plugins": [
       "./plugins/withBackgroundRemoval",
-      "./plugins/withBackgroundRemovalAndroid"
+      "./plugins/withBackgroundRemovalAndroid",
+      "expo-font"
     ],
     "android": {
       "adaptiveIcon": {
