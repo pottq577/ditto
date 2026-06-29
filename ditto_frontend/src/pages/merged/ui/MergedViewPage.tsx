@@ -11,10 +11,10 @@ import {
   Alert,
   ListRenderItem,
 } from "react-native";
-import { Logger } from "../../../shared/lib/logger";
+import { Logger } from "@/shared/lib/logger";
 import { styles } from "./MergedViewPage.styles";
-import { API_BASE_URL } from "../../../shared/api/api";
-import { useAuth } from "../../../shared/lib/AuthContext";
+import { API_BASE_URL } from "@/shared/api/api";
+import { useAuth } from "@/shared/lib/AuthContext";
 
 interface Sticker {
   id: number;
@@ -146,7 +146,11 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
           onPress={() => setActiveStickerId(s.id)}
         >
           <Image
-            source={{ uri: s.imageUrl }}
+            source={{
+              uri: s.imageUrl.startsWith("/")
+                ? `${API_BASE_URL}${s.imageUrl}`
+                : s.imageUrl,
+            }}
             style={styles.stickerImage}
             resizeMode="contain"
           />
