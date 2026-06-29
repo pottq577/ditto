@@ -15,5 +15,5 @@ spring:
 
 rapidapi:
   background-removal:
-    key: 08163221acmsh9d44e2faab8fbd5p19ecf9jsnfa1e46c83483
+    key: ${RAPIDAPI_BACKGROUND_REMOVAL_KEY}
     host: background-removal-ai.p.rapidapi.com
