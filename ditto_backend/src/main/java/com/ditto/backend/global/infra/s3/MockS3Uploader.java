@@ -7,13 +7,25 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
+import com.ditto.backend.global.error.exception.BusinessException;
+import com.ditto.backend.global.error.exception.ErrorCode;
 
 @Service
 public class MockS3Uploader {
     private static final String UPLOAD_DIR = "uploads/";
+    private static final List<String> ALLOWED_CONTENT_TYPES = List.of("image/jpeg", "image/png", "image/webp", "image/gif");
 
     public String upload(MultipartFile file) {
-        if (file.isEmpty()) return null;
+        if (file.isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
         try {
             File dir = new File(UPLOAD_DIR);
             if (!dir.exists()) {
@@ -31,14 +43,14 @@ public class MockS3Uploader {
             Path targetPath = filePath.toAbsolutePath().normalize();
 
             if (!targetPath.startsWith(uploadDirPath)) {
-                throw new com.ditto.backend.global.error.exception.BusinessException(com.ditto.backend.global.error.exception.ErrorCode.FILE_UPLOAD_ERROR);
+                throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR);
             }
 
             Files.write(targetPath, file.getBytes());
-            // 반환은 로컬 정적 리소스 경로로
-            return "http://localhost:8080/uploads/" + filename;
+            // 반환은 로컬 정적 리소스 경로로 상대경로만 저장
+            return "/uploads/" + filename;
         } catch (IOException e) {
-            throw new com.ditto.backend.global.error.exception.BusinessException(com.ditto.backend.global.error.exception.ErrorCode.FILE_UPLOAD_ERROR);
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR);
         }
     }
 }
