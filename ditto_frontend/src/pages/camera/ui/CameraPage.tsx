@@ -10,10 +10,10 @@ import {
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as FileSystem from "expo-file-system/legacy";
 import { removeBackground, Config } from "@imgly/background-removal";
-import { Logger } from "../../../shared/lib/logger";
+import { Logger } from "@/shared/lib/logger";
 import { styles } from "./CameraPage.styles";
-import { API_BASE_URL } from "../../../shared/api/api";
-import { useAuth } from "../../../shared/lib/AuthContext";
+import { API_BASE_URL } from "@/shared/api/api";
+import { useAuth } from "@/shared/lib/AuthContext";
 
 export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
   const { userId, coupleId } = useAuth();
@@ -58,17 +58,22 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
   const processImage = async (uri: string) => {
     setIsProcessing(true);
     try {
-      // 1. Fetch file as blob
-      const response = await fetch(uri);
-      const blob = await response.blob();
+      // 1. Fetch file as blob (RN에서 file:// fetch가 종종 실패하므로 대비)
+      let blob;
+      try {
+        const response = await fetch(uri);
+        blob = await response.blob();
+      } catch (e) {
+        Logger.error("로컬 파일 fetch 실패, 원본 이미지 사용:", e);
+        setPhotoUri(uri);
+        setIsProcessing(false);
+        return;
+      }
 
-      // 2. Process with imgly
+      // 2. Process with imgly (RN 환경에서는 WASM/WebWorker 지원 한계로 실패할 확률 높음)
       const config: Config = {
         publicPath:
           "https://static.imgly.com/@imgly/background-removal-data/1.4.3/dist/",
-        progress: (key, current, total) => {
-          Logger.info(`Downloading ${key}: ${current}/${total}`);
-        },
       };
 
       const resultBlob = await removeBackground(blob, config);
@@ -95,21 +100,24 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
 
           setPhotoUri(destPath);
         } catch (error) {
-          Logger.error("누끼 저장 실패:", error);
-          Alert.alert("오류", "이미지 처리에 실패했습니다.");
+          Logger.error("누끼 저장 실패, 원본 이미지 사용:", error);
+          setPhotoUri(uri);
         } finally {
           setIsProcessing(false);
         }
       };
       reader.onerror = () => {
-        Logger.error("누끼 읽기 실패");
-        Alert.alert("오류", "이미지를 읽는데 실패했습니다.");
+        Logger.error("누끼 읽기 실패, 원본 이미지 사용");
+        setPhotoUri(uri);
         setIsProcessing(false);
       };
       reader.readAsDataURL(resultBlob);
     } catch (error) {
-      Logger.error("누끼 처리 실패:", error);
-      Alert.alert("오류", "배경 제거 중 오류가 발생했습니다.");
+      Logger.error(
+        "누끼 처리 실패(Web 전용 라이브러리 제약), 원본 이미지 사용:",
+        error,
+      );
+      setPhotoUri(uri); // 오류 시 원본 이미지라도 사용할 수 있게 Fallback
       setIsProcessing(false);
     }
   };
@@ -199,17 +207,28 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
 
   return (
     <View style={styles.container}>
-      <CameraView style={styles.camera} ref={cameraRef} facing="back">
-        <View style={styles.overlay}>
-          {isProcessing ? (
-            <ActivityIndicator size="large" color="#ffffff" />
-          ) : (
-            <TouchableOpacity style={styles.captureBtn} onPress={takePicture}>
-              <View style={styles.captureInner} />
-            </TouchableOpacity>
-          )}
-        </View>
-      </CameraView>
+      <CameraView style={styles.camera} ref={cameraRef} facing="back" />
+      <View
+        style={[
+          styles.overlay,
+          {
+            position: "absolute",
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            zIndex: 10,
+          },
+        ]}
+      >
+        {isProcessing ? (
+          <ActivityIndicator size="large" color="#ffffff" />
+        ) : (
+          <TouchableOpacity style={styles.captureBtn} onPress={takePicture}>
+            <View style={styles.captureInner} />
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   );
 };
