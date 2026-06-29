@@ -2,7 +2,6 @@ import React, { useState, useRef, useMemo } from "react";
 import {
   Text,
   View,
-  TouchableOpacity,
   Image,
   ActivityIndicator,
   Alert,
@@ -16,6 +15,7 @@ import { API_BASE_URL } from "@/shared/api/api";
 import { useAuth } from "@/shared/lib/AuthContext";
 import { BackgroundRemoval } from "@/shared/native/BackgroundRemovalModule";
 import { useTheme } from "@/shared/theme/theme";
+import { AnimatedButton } from "@/shared/ui/AnimatedButton";
 
 export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
   const { userId, coupleId } = useAuth();
@@ -35,9 +35,9 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
     return (
       <View style={styles.container}>
         <Text style={styles.text}>카메라 권한이 필요합니다.</Text>
-        <TouchableOpacity style={styles.button} onPress={requestPermission}>
+        <AnimatedButton style={styles.button} onPress={requestPermission}>
           <Text style={styles.buttonText}>권한 허용</Text>
-        </TouchableOpacity>
+        </AnimatedButton>
       </View>
     );
   }
@@ -141,20 +141,20 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
           />
         )}
         <View style={styles.actionRow}>
-          <TouchableOpacity
+          <AnimatedButton
             style={styles.button}
             onPress={retake}
             disabled={isProcessing}
           >
             <Text style={styles.buttonText}>다시 담기</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+          </AnimatedButton>
+          <AnimatedButton
             style={[styles.button, styles.sendButton]}
             onPress={sendSticker}
             disabled={isProcessing}
           >
             <Text style={styles.sendButtonText}>다이어리에 붙이기</Text>
-          </TouchableOpacity>
+          </AnimatedButton>
         </View>
       </View>
     );
@@ -179,9 +179,9 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
         {isProcessing ? (
           <ActivityIndicator size="large" color={colors.primary} />
         ) : (
-          <TouchableOpacity style={styles.captureBtn} onPress={takePicture}>
+          <AnimatedButton style={styles.captureBtn} onPress={takePicture}>
             <View style={styles.captureInner} />
-          </TouchableOpacity>
+          </AnimatedButton>
         )}
       </View>
     </View>

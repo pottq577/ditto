@@ -4,18 +4,19 @@ import {
   View,
   Image,
   ActivityIndicator,
-  TouchableOpacity,
   TextInput,
   Button,
   FlatList,
   Alert,
   ListRenderItem,
 } from "react-native";
+import Animated, { FadeInUp } from "react-native-reanimated";
 import { Logger } from "@/shared/lib/logger";
 import { createStyles } from "./MergedViewPage.styles";
 import { API_BASE_URL } from "@/shared/api/api";
 import { useAuth } from "@/shared/lib/AuthContext";
 import { useTheme } from "@/shared/theme/theme";
+import { AnimatedButton } from "@/shared/ui/AnimatedButton";
 
 interface Sticker {
   id: number;
@@ -145,40 +146,42 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
   const renderItem: ListRenderItem<Sticker> = useCallback(
     ({ item: s, index }) => {
       // Signature: 아날로그 느낌을 위한 약간의 랜덤 회전율
-      // index를 시드로 사용하여 렌더링 시마다 동일하게 유지
       const rotation = -3 + (index % 7); 
 
       return (
-        <TouchableOpacity
-          style={[styles.stickerWrapper, { transform: [{ rotate: `${rotation}deg` }] }]}
-          onPress={() => setActiveStickerId(s.id)}
-          activeOpacity={0.8}
+        <Animated.View
+          entering={FadeInUp.delay(index * 100).springify().damping(15)}
         >
-          <Image
-            source={{
-              uri: s.imageUrl.startsWith("/")
-                ? `${API_BASE_URL}${s.imageUrl}`
-                : s.imageUrl,
-            }}
-            style={styles.stickerImage}
-            resizeMode="cover"
-          />
-          {reactions[s.id]?.map((r, rIdx) => (
-            <View
-              key={r.id}
-              style={[
-                styles.bubble,
-                { 
-                  right: -40, 
-                  top: rIdx * 45,
-                  transform: [{ rotate: `${-rotation + (rIdx % 3 - 1)}deg` }] // 말풍선도 약간 삐뚤게
-                }
-              ]}
-            >
-              <Text style={styles.bubbleText}>{r.content}</Text>
-            </View>
-          ))}
-        </TouchableOpacity>
+          <AnimatedButton
+            style={[styles.stickerWrapper, { transform: [{ rotate: `${rotation}deg` }] }]}
+            onPress={() => setActiveStickerId(s.id)}
+          >
+            <Image
+              source={{
+                uri: s.imageUrl.startsWith("/")
+                  ? `${API_BASE_URL}${s.imageUrl}`
+                  : s.imageUrl,
+              }}
+              style={styles.stickerImage}
+              resizeMode="cover"
+            />
+            {reactions[s.id]?.map((r, rIdx) => (
+              <View
+                key={r.id}
+                style={[
+                  styles.bubble,
+                  { 
+                    right: -40, 
+                    top: rIdx * 45,
+                    transform: [{ rotate: `${-rotation + (rIdx % 3 - 1)}deg` }] // 말풍선도 약간 삐뚤게
+                  }
+                ]}
+              >
+                <Text style={styles.bubbleText}>{r.content}</Text>
+              </View>
+            ))}
+          </AnimatedButton>
+        </Animated.View>
       );
     },
     [reactions, styles],
@@ -191,13 +194,21 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack}>
+        <AnimatedButton 
+          onPress={onBack} 
+          hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+          static
+        >
           <Text style={styles.headerBtn}>오늘 담기</Text>
-        </TouchableOpacity>
+        </AnimatedButton>
         <Text style={styles.headerTitle}>우리의 오늘</Text>
-        <TouchableOpacity onPress={fetchStickers}>
+        <AnimatedButton 
+          onPress={fetchStickers}
+          hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+          static
+        >
           <Text style={styles.headerBtn}>조각 모으기</Text>
-        </TouchableOpacity>
+        </AnimatedButton>
       </View>
 
       <View style={styles.canvas}>
