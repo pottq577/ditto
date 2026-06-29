@@ -1,7 +1,9 @@
 package com.ditto.backend.global.config;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.ditto.backend.domain.couple.entity.Couple;
 import com.ditto.backend.domain.couple.repository.CoupleRepository;
@@ -11,6 +13,7 @@ import com.ditto.backend.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
 @Component
+@Profile("local")
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 
@@ -18,6 +21,7 @@ public class DataInitializer implements CommandLineRunner {
     private final CoupleRepository coupleRepository;
 
     @Override
+    @Transactional
     public void run(String... args) throws Exception {
         if (userRepository.count() == 0) {
             User user1 = User.builder().nickname("UserA").providerId("mock_a").build();

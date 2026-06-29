@@ -7,9 +7,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestBody;
 
+import com.ditto.backend.global.auth.LoginUser;
+import jakarta.validation.Valid;
+
+import com.ditto.backend.domain.reaction.dto.ReactionRequestDto;
 import com.ditto.backend.domain.reaction.dto.ReactionResponseDto;
 import com.ditto.backend.domain.reaction.service.ReactionService;
 
@@ -24,14 +29,13 @@ public class ReactionController {
 
     @PostMapping
     public ResponseEntity<ReactionResponseDto> addReaction(
-            @RequestParam("stickerId") Long stickerId,
-            @RequestParam("userId") Long userId,
-            @RequestParam("content") String content) {
-        return ResponseEntity.ok(reactionService.addReaction(stickerId, userId, content));
+            @LoginUser Long userId,
+            @Valid @RequestBody ReactionRequestDto request) {
+        return ResponseEntity.ok(reactionService.addReaction(request.getStickerId(), userId, request.getContent()));
     }
 
     @GetMapping("/sticker/{stickerId}")
-    public ResponseEntity<List<ReactionResponseDto>> getReactions(@PathVariable Long stickerId) {
-        return ResponseEntity.ok(reactionService.getReactions(stickerId));
+    public ResponseEntity<List<ReactionResponseDto>> getReactions(@PathVariable Long stickerId, @LoginUser Long userId) {
+        return ResponseEntity.ok(reactionService.getReactions(stickerId, userId));
     }
 }

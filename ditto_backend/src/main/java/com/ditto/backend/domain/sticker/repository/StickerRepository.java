@@ -10,5 +10,6 @@ import com.ditto.backend.domain.sticker.entity.Sticker;
 public interface StickerRepository extends JpaRepository<Sticker, Long> {
     List<Sticker> findByCoupleId(Long coupleId);
 
-    List<Sticker> findByCoupleIdAndCreatedAtBetween(Long coupleId, LocalDateTime start, LocalDateTime end);
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"user"})
+    List<Sticker> findByCoupleIdAndCreatedAtGreaterThanEqualAndCreatedAtLessThan(Long coupleId, LocalDateTime start, LocalDateTime end);
 }

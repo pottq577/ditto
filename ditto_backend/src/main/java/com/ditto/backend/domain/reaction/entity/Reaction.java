@@ -14,13 +14,19 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Index;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "reactions")
+@Table(
+    name = "reactions",
+    indexes = {
+        @Index(name = "idx_reactions_sticker_created_at", columnList = "sticker_id, created_at")
+    }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Reaction {
@@ -48,6 +54,6 @@ public class Reaction {
         this.sticker = sticker;
         this.user = user;
         this.content = content;
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = java.time.LocalDateTime.now(java.time.ZoneId.of("Asia/Seoul"));
     }
 }

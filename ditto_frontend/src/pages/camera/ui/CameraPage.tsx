@@ -1,17 +1,22 @@
 import React, { useState, useRef } from "react";
 import {
-  StyleSheet,
   Text,
   View,
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
-import * as FileSystem from "expo-file-system";
-import imglyRemoveBackground, { Config } from "@imgly/background-removal";
+import * as FileSystem from "expo-file-system/legacy";
+import { removeBackground, Config } from "@imgly/background-removal";
+import { Logger } from "../../../shared/lib/logger";
+import { styles } from './CameraPage.styles';
+import { API_BASE_URL } from "../../../shared/api/api";
+import { useAuth } from "../../../shared/lib/AuthContext";
 
 export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
+  const { userId, coupleId } = useAuth();
   const [permission, requestPermission] = useCameraPermissions();
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -44,7 +49,8 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
           processImage(photo.uri);
         }
       } catch (error) {
-        console.error("카메라 촬영 실패:", error);
+        Logger.error("카메라 촬영 실패:", error);
+        Alert.alert("오류", "사진 촬영에 실패했습니다.");
       }
     }
   };
@@ -61,39 +67,55 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
         publicPath:
           "https://static.imgly.com/@imgly/background-removal-data/1.4.3/dist/",
         progress: (key, current, total) => {
-          console.log(`Downloading ${key}: ${current}/${total}`);
+          Logger.info(`Downloading ${key}: ${current}/${total}`);
         },
       };
 
-      const resultBlob = await imglyRemoveBackground(blob, config);
+      const resultBlob = await removeBackground(blob, config);
 
       // 3. Convert result blob to base64 or save it
       const reader = new FileReader();
       reader.onloadend = async () => {
-        const base64data = reader.result as string;
+        try {
+          if (typeof reader.result !== "string") {
+            throw new Error("Failed to read processed image");
+          }
 
-        // Save to FileSystem
-        const filename = `nucci_${Date.now()}.png`;
-        const destPath = `${FileSystem.documentDirectory}${filename}`;
+          const filename = `nucci_${Date.now()}.png`;
+          const destPath = `${FileSystem.cacheDirectory}${filename}`;
+          const base64Code = reader.result.split(",")[1];
 
-        // Save base64 string (strip the data prefix)
-        const base64Code = base64data.split(",")[1];
-        await FileSystem.writeAsStringAsync(destPath, base64Code, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
+          if (!base64Code) {
+            throw new Error("Failed to extract image payload");
+          }
 
-        setPhotoUri(destPath);
+          await FileSystem.writeAsStringAsync(destPath, base64Code, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+
+          setPhotoUri(destPath);
+        } catch (error) {
+          Logger.error("누끼 저장 실패:", error);
+          Alert.alert("오류", "이미지 처리에 실패했습니다.");
+        } finally {
+          setIsProcessing(false);
+        }
+      };
+      reader.onerror = () => {
+        Logger.error("누끼 읽기 실패");
+        Alert.alert("오류", "이미지를 읽는데 실패했습니다.");
         setIsProcessing(false);
       };
       reader.readAsDataURL(resultBlob);
     } catch (error) {
-      console.error("누끼 처리 실패:", error);
+      Logger.error("누끼 처리 실패:", error);
+      Alert.alert("오류", "배경 제거 중 오류가 발생했습니다.");
       setIsProcessing(false);
     }
   };
 
   const sendSticker = async () => {
-    if (!photoUri) return;
+    if (!photoUri || isProcessing) return;
     setIsProcessing(true);
     try {
       const formData = new FormData();
@@ -103,24 +125,31 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
         type: "image/png",
       } as any);
 
-      // 더미 데이터: userId=1, coupleId=1
-      const response = await fetch(
-        "http://localhost:8080/api/v1/stickers?userId=1&coupleId=1",
-        {
-          method: "POST",
-          body: formData,
+      const response = await fetch(`${API_BASE_URL}/api/v1/stickers?coupleId=${coupleId || 1}`, {
+        method: "POST",
+        headers: {
+          "X-User-Id": userId || "1",
         },
-      );
+        body: formData,
+      });
 
       if (response.ok) {
-        alert("전송 완료!");
+        Alert.alert("성공", "전송 완료!");
+        
+        // 업로드 성공 후 캐시 파일 삭제 (선택적)
+        try {
+           await FileSystem.deleteAsync(photoUri, { idempotent: true });
+        } catch (e) {
+           Logger.error("캐시 파일 삭제 실패", e);
+        }
+
         onComplete();
       } else {
-        alert("전송 실패");
+        Alert.alert("실패", "전송에 실패했습니다.");
       }
     } catch (error) {
-      console.error("업로드 에러:", error);
-      alert("업로드 중 오류 발생");
+      Logger.error("업로드 에러:", error);
+      Alert.alert("오류", "업로드 중 오류가 발생했습니다.");
     } finally {
       setIsProcessing(false);
     }
@@ -181,68 +210,3 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  text: {
-    color: "#fff",
-    marginBottom: 20,
-  },
-  camera: {
-    flex: 1,
-    width: "100%",
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: "transparent",
-    justifyContent: "flex-end",
-    alignItems: "center",
-    paddingBottom: 40,
-  },
-  captureBtn: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: "rgba(255,255,255,0.3)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  captureInner: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#fff",
-  },
-  preview: {
-    flex: 1,
-    width: "100%",
-  },
-  actionRow: {
-    position: "absolute",
-    bottom: 40,
-    flexDirection: "row",
-    gap: 20,
-  },
-  button: {
-    backgroundColor: "#333",
-    paddingVertical: 15,
-    paddingHorizontal: 25,
-    borderRadius: 10,
-  },
-  sendButton: {
-    backgroundColor: "#4A90E2",
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  loader: {
-    position: "absolute",
-  },
-});

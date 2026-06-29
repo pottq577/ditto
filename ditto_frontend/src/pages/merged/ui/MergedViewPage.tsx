@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
-  StyleSheet,
   Text,
   View,
   Image,
@@ -8,7 +7,14 @@ import {
   TouchableOpacity,
   TextInput,
   Button,
+  FlatList,
+  Alert,
+  ListRenderItem,
 } from "react-native";
+import { Logger } from "../../../shared/lib/logger";
+import { styles } from "./MergedViewPage.styles";
+import { API_BASE_URL } from "../../../shared/api/api";
+import { useAuth } from "../../../shared/lib/AuthContext";
 
 interface Sticker {
   id: number;
@@ -23,61 +29,99 @@ interface Reaction {
 }
 
 export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
+  const { userId, coupleId } = useAuth();
   const [stickers, setStickers] = useState<Sticker[]>([]);
   const [reactions, setReactions] = useState<Record<number, Reaction[]>>({});
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeStickerId, setActiveStickerId] = useState<number | null>(null);
   const [reactionText, setReactionText] = useState("");
 
   const fetchStickers = async () => {
+    setLoading(true);
     try {
-      const response = await fetch(
-        "http://localhost:8080/api/v1/stickers/couple/1",
-      );
+      const response = await fetch(`${API_BASE_URL}/api/v1/stickers/couple/${coupleId || 1}`, {
+        headers: { "X-User-Id": userId || "1" }
+      });
       if (response.ok) {
         const data: Sticker[] = await response.json();
         setStickers(data);
 
-        // Fetch reactions for each sticker
-        data.forEach((s) => fetchReactions(s.id));
+        // N+1 문제 완화를 위한 Promise.all 및 Batched update
+        const reactionsData = await Promise.all(
+          data.map(async (s) => {
+            try {
+              const res = await fetch(`${API_BASE_URL}/api/v1/reactions/sticker/${s.id}`, {
+                headers: { "X-User-Id": userId || "1" }
+              });
+              if (res.ok) {
+                return { id: s.id, data: await res.json() };
+              }
+            } catch (e) {
+              Logger.error(`리액션 조회 실패 (sticker: ${s.id})`, e);
+            }
+            return null;
+          })
+        );
+        
+        const newReactions: Record<number, Reaction[]> = {};
+        reactionsData.forEach((result) => {
+          if (result) newReactions[result.id] = result.data;
+        });
+        setReactions((prev) => ({ ...prev, ...newReactions }));
+      } else {
+        Alert.alert("조회 실패", "스티커 목록을 불러오지 못했습니다.");
       }
     } catch (error) {
-      console.error("스티커 조회 실패:", error);
+      Logger.error("스티커 조회 실패:", error);
+      Alert.alert("네트워크 오류", "서버와 통신할 수 없습니다.");
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchReactions = async (stickerId: number) => {
+  const fetchSingleReaction = async (stickerId: number) => {
     try {
-      const res = await fetch(
-        `http://localhost:8080/api/v1/reactions/sticker/${stickerId}`,
-      );
+      const res = await fetch(`${API_BASE_URL}/api/v1/reactions/sticker/${stickerId}`, {
+        headers: { "X-User-Id": userId || "1" }
+      });
       if (res.ok) {
         const rData = await res.json();
         setReactions((prev) => ({ ...prev, [stickerId]: rData }));
       }
     } catch (error) {
-      console.error("리액션 조회 실패:", error);
+      Logger.error("리액션 조회 실패:", error);
     }
   };
 
   const submitReaction = async () => {
-    if (!activeStickerId || !reactionText) return;
+    if (!activeStickerId || !reactionText || isSubmitting) return;
+    setIsSubmitting(true);
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/v1/reactions?stickerId=${activeStickerId}&userId=1&content=${encodeURIComponent(reactionText)}`,
-        {
-          method: "POST",
+      const response = await fetch(`${API_BASE_URL}/api/v1/reactions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-User-Id": userId || "1",
         },
-      );
+        body: JSON.stringify({
+          stickerId: activeStickerId,
+          content: reactionText,
+        }),
+      });
       if (response.ok) {
         setReactionText("");
+        const submittedId = activeStickerId;
         setActiveStickerId(null);
-        fetchReactions(activeStickerId);
+        fetchSingleReaction(submittedId);
+      } else {
+        Alert.alert("전송 실패", "리액션을 남기지 못했습니다.");
       }
     } catch (e) {
-      console.error("리액션 전송 실패", e);
+      Logger.error("리액션 전송 실패", e);
+      Alert.alert("네트워크 오류", "서버와 통신할 수 없습니다.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -85,13 +129,32 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
     fetchStickers();
   }, []);
 
-  if (loading) {
+  const renderItem: ListRenderItem<Sticker> = useCallback(({ item: s }) => {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#ffffff" />
-      </View>
+      <TouchableOpacity
+        style={styles.stickerWrapper}
+        onPress={() => setActiveStickerId(s.id)}
+      >
+        <Image
+          source={{ uri: s.imageUrl }}
+          style={styles.stickerImage}
+          resizeMode="contain"
+        />
+        {reactions[s.id]?.map((r, rIdx) => (
+          <View
+            key={r.id}
+            style={[styles.bubble, { right: -50, top: rIdx * 40 }]}
+          >
+            <Text style={styles.bubbleText}>{r.content}</Text>
+          </View>
+        ))}
+      </TouchableOpacity>
     );
-  }
+  }, [reactions]);
+
+  const ListEmptyComponent = () => (
+    <Text style={styles.emptyText}>아직 업로드된 스티커가 없습니다.</Text>
+  );
 
   return (
     <View style={styles.container}>
@@ -106,38 +169,20 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
       </View>
 
       <View style={styles.canvas}>
-        {stickers.length === 0 ? (
-          <Text style={styles.emptyText}>아직 업로드된 스티커가 없습니다.</Text>
+        {loading ? (
+          <ActivityIndicator size="large" color="#ffffff" style={{ marginTop: 100 }} />
         ) : (
-          stickers.map((s, index) => (
-            <TouchableOpacity
-              key={s.id}
-              style={[
-                styles.stickerWrapper,
-                { zIndex: index, top: index * 200 },
-              ]}
-              onPress={() => setActiveStickerId(s.id)}
-            >
-              <Image
-                source={{ uri: s.imageUrl }}
-                style={styles.stickerImage}
-                resizeMode="contain"
-              />
-              {/* 말풍선 렌더링 */}
-              {reactions[s.id]?.map((r, rIdx) => (
-                <View
-                  key={r.id}
-                  style={[styles.bubble, { right: -50, top: rIdx * 40 }]}
-                >
-                  <Text style={styles.bubbleText}>{r.content}</Text>
-                </View>
-              ))}
-            </TouchableOpacity>
-          ))
+          <FlatList
+            data={stickers}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderItem}
+            ListEmptyComponent={ListEmptyComponent}
+            contentContainerStyle={{ paddingBottom: 100 }}
+            showsVerticalScrollIndicator={false}
+          />
         )}
       </View>
 
-      {/* 리액션 입력창 오버레이 */}
       {activeStickerId && (
         <View style={styles.reactionInputContainer}>
           <TextInput
@@ -146,88 +191,22 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
             placeholderTextColor="#ccc"
             value={reactionText}
             onChangeText={setReactionText}
+            editable={!isSubmitting}
           />
-          <Button title="작성" onPress={submitReaction} color="#4A90E2" />
+          <Button 
+            title={isSubmitting ? "전송중..." : "작성"} 
+            onPress={submitReaction} 
+            color="#4A90E2" 
+            disabled={isSubmitting} 
+          />
           <Button
             title="취소"
             onPress={() => setActiveStickerId(null)}
             color="#999"
+            disabled={isSubmitting}
           />
         </View>
       )}
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000",
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingTop: 50,
-    paddingHorizontal: 20,
-    paddingBottom: 10,
-    backgroundColor: "#111",
-  },
-  headerTitle: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  headerBtn: {
-    color: "#4A90E2",
-    fontSize: 16,
-  },
-  canvas: {
-    flex: 1,
-    alignItems: "center",
-    position: "relative",
-    marginTop: 50,
-  },
-  emptyText: {
-    color: "#aaa",
-    marginTop: 100,
-  },
-  stickerWrapper: {
-    position: "absolute",
-    width: 250,
-    height: 250,
-  },
-  stickerImage: {
-    width: "100%",
-    height: "100%",
-  },
-  bubble: {
-    position: "absolute",
-    backgroundColor: "rgba(255,255,255,0.9)",
-    padding: 8,
-    borderRadius: 15,
-    maxWidth: 150,
-  },
-  bubbleText: {
-    color: "#000",
-    fontSize: 14,
-  },
-  reactionInputContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "#222",
-    padding: 20,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: "#444",
-    color: "#fff",
-    padding: 10,
-    borderRadius: 8,
-  },
-});

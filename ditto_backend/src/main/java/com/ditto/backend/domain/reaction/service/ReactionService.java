@@ -13,6 +13,9 @@ import com.ditto.backend.domain.sticker.entity.Sticker;
 import com.ditto.backend.domain.sticker.repository.StickerRepository;
 import com.ditto.backend.domain.user.entity.User;
 import com.ditto.backend.domain.user.repository.UserRepository;
+import com.ditto.backend.global.error.exception.BusinessException;
+import com.ditto.backend.global.error.exception.ErrorCode;
+import com.ditto.backend.domain.couple.entity.Couple;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,8 +29,15 @@ public class ReactionService {
 
     @Transactional
     public ReactionResponseDto addReaction(Long stickerId, Long userId, String content) {
-        Sticker sticker = stickerRepository.findById(stickerId).orElseThrow();
-        User user = userRepository.findById(userId).orElseThrow();
+        Sticker sticker = stickerRepository.findById(stickerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STICKER_NOT_FOUND));
+        
+        Couple couple = sticker.getCouple();
+        if (!couple.getUser1().getId().equals(userId) && !couple.getUser2().getId().equals(userId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+
+        User user = userRepository.getReferenceById(userId);
 
         Reaction reaction = Reaction.builder()
                 .sticker(sticker)
@@ -41,10 +51,17 @@ public class ReactionService {
     }
 
     @Transactional(readOnly = true)
-    public List<ReactionResponseDto> getReactions(Long stickerId) {
-        return reactionRepository.findByStickerId(stickerId).stream()
-                .map(r -> new ReactionResponseDto(r.getId(), r.getSticker().getId(), r.getUser().getId(),
-                        r.getContent()))
+    public List<ReactionResponseDto> getReactions(Long stickerId, Long userId) {
+        Sticker sticker = stickerRepository.findById(stickerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STICKER_NOT_FOUND));
+        
+        Couple couple = sticker.getCouple();
+        if (!couple.getUser1().getId().equals(userId) && !couple.getUser2().getId().equals(userId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+
+        return reactionRepository.findByStickerIdOrderByCreatedAtAsc(stickerId).stream()
+                .map(r -> new ReactionResponseDto(r.getId(), r.getSticker().getId(), r.getUser().getId(), r.getContent()))
                 .collect(Collectors.toList());
     }
 }

@@ -1,16 +1,56 @@
 package com.ditto.backend.global.infra.s3;
 
-import java.util.UUID;
-
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import com.ditto.backend.global.error.exception.BusinessException;
+import com.ditto.backend.global.error.exception.ErrorCode;
 
-@Component
+@Service
 public class MockS3Uploader {
+    private static final String UPLOAD_DIR = "uploads/";
+    private static final List<String> ALLOWED_CONTENT_TYPES = List.of("image/jpeg", "image/png", "image/webp", "image/gif");
 
-    // MVP 용 가짜 S3 업로더: S3 URL 형식의 더미 문자열 반환
     public String upload(MultipartFile file) {
-        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-        return "https://mock-s3-bucket.s3.ap-northeast-2.amazonaws.com/" + fileName;
+        if (file.isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        try {
+            File dir = new File(UPLOAD_DIR);
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+            String originalFilename = file.getOriginalFilename();
+            if (originalFilename == null) {
+                originalFilename = "unknown";
+            }
+            String cleanFilename = Paths.get(originalFilename).getFileName().toString();
+            String filename = System.currentTimeMillis() + "_" + cleanFilename;
+            Path filePath = Paths.get(UPLOAD_DIR, filename);
+
+            Path uploadDirPath = Paths.get(UPLOAD_DIR).toAbsolutePath().normalize();
+            Path targetPath = filePath.toAbsolutePath().normalize();
+
+            if (!targetPath.startsWith(uploadDirPath)) {
+                throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR);
+            }
+
+            Files.write(targetPath, file.getBytes());
+            // 반환은 로컬 정적 리소스 경로로 상대경로만 저장
+            return "/uploads/" + filename;
+        } catch (IOException e) {
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR);
+        }
     }
 }

@@ -9,8 +9,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.ditto.backend.global.auth.LoginUser;
 
 import com.ditto.backend.domain.sticker.dto.StickerResponseDto;
 import com.ditto.backend.domain.sticker.service.StickerService;
@@ -26,7 +29,7 @@ public class StickerController {
 
     @PostMapping
     public ResponseEntity<StickerResponseDto> uploadSticker(
-            @RequestParam("userId") Long userId,
+            @LoginUser Long userId,
             @RequestParam("coupleId") Long coupleId,
             @RequestPart("file") MultipartFile file) {
 
@@ -35,7 +38,7 @@ public class StickerController {
     }
 
     @GetMapping("/couple/{coupleId}")
-    public ResponseEntity<List<StickerResponseDto>> getCoupleStickers(@PathVariable Long coupleId) {
-        return ResponseEntity.ok(stickerService.getCoupleStickers(coupleId));
+    public ResponseEntity<List<StickerResponseDto>> getCoupleStickers(@PathVariable Long coupleId, @LoginUser Long userId) {
+        return ResponseEntity.ok(stickerService.getCoupleStickers(coupleId, userId));
     }
 }

@@ -1,6 +1,8 @@
 package com.ditto.backend.domain.couple.entity;
 
 import com.ditto.backend.domain.user.entity.User;
+import com.ditto.backend.global.error.exception.BusinessException;
+import com.ditto.backend.global.error.exception.ErrorCode;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -31,6 +33,12 @@ public class Couple {
 
     @Builder
     public Couple(User user1, User user2) {
+        if (user1 == null || user2 == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+        if (user1 == user2 || (user1.getId() != null && user1.getId().equals(user2.getId()))) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
         this.user1 = user1;
         this.user2 = user2;
         this.connectedAt = LocalDateTime.now();
