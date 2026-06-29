@@ -13,8 +13,10 @@ import { removeBackground, Config } from "@imgly/background-removal";
 import { Logger } from "../../../shared/lib/logger";
 import { styles } from './CameraPage.styles';
 import { API_BASE_URL } from "../../../shared/api/api";
+import { useAuth } from "../../../shared/lib/AuthContext";
 
 export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
+  const { userId, coupleId } = useAuth();
   const [permission, requestPermission] = useCameraPermissions();
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -48,6 +50,7 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
         }
       } catch (error) {
         Logger.error("카메라 촬영 실패:", error);
+        Alert.alert("오류", "사진 촬영에 실패했습니다.");
       }
     }
   };
@@ -122,11 +125,10 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
         type: "image/png",
       } as any);
 
-      // 더미 데이터: userId=1, coupleId=1
-      const response = await fetch(`${API_BASE_URL}/api/v1/stickers?coupleId=1`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/stickers?coupleId=${coupleId || 1}`, {
         method: "POST",
         headers: {
-          "X-User-Id": "1",
+          "X-User-Id": userId || "1",
         },
         body: formData,
       });

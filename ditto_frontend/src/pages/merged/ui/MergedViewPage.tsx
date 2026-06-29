@@ -14,6 +14,7 @@ import {
 import { Logger } from "../../../shared/lib/logger";
 import { styles } from "./MergedViewPage.styles";
 import { API_BASE_URL } from "../../../shared/api/api";
+import { useAuth } from "../../../shared/lib/AuthContext";
 
 interface Sticker {
   id: number;
@@ -28,6 +29,7 @@ interface Reaction {
 }
 
 export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
+  const { userId, coupleId } = useAuth();
   const [stickers, setStickers] = useState<Sticker[]>([]);
   const [reactions, setReactions] = useState<Record<number, Reaction[]>>({});
   const [loading, setLoading] = useState(true);
@@ -38,7 +40,9 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
   const fetchStickers = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/stickers/couple/1`);
+      const response = await fetch(`${API_BASE_URL}/api/v1/stickers/couple/${coupleId || 1}`, {
+        headers: { "X-User-Id": userId || "1" }
+      });
       if (response.ok) {
         const data: Sticker[] = await response.json();
         setStickers(data);
@@ -47,7 +51,9 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
         const reactionsData = await Promise.all(
           data.map(async (s) => {
             try {
-              const res = await fetch(`${API_BASE_URL}/api/v1/reactions/sticker/${s.id}`);
+              const res = await fetch(`${API_BASE_URL}/api/v1/reactions/sticker/${s.id}`, {
+                headers: { "X-User-Id": userId || "1" }
+              });
               if (res.ok) {
                 return { id: s.id, data: await res.json() };
               }
@@ -76,7 +82,9 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
 
   const fetchSingleReaction = async (stickerId: number) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/v1/reactions/sticker/${stickerId}`);
+      const res = await fetch(`${API_BASE_URL}/api/v1/reactions/sticker/${stickerId}`, {
+        headers: { "X-User-Id": userId || "1" }
+      });
       if (res.ok) {
         const rData = await res.json();
         setReactions((prev) => ({ ...prev, [stickerId]: rData }));
@@ -94,7 +102,7 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-User-Id": "1",
+          "X-User-Id": userId || "1",
         },
         body: JSON.stringify({
           stickerId: activeStickerId,

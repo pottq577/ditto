@@ -1,6 +1,22 @@
-// React Native (Expo) 안드로이드 에뮬레이터에서 로컬호스트를 가리키려면 10.0.2.2를 사용합니다.
-// iOS 시뮬레이터나 웹 환경에서는 localhost가 작동합니다.
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 
-  (Platform.OS === 'android' ? 'http://10.0.2.2:8080' : 'http://localhost:8080');
+const getBaseUrl = () => {
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+  
+  const hostUri = Constants.expoConfig?.hostUri;
+  if (hostUri) {
+    const localhost = hostUri.split(':')[0];
+    return `http://${localhost}:8080`;
+  }
+
+  if (__DEV__) {
+    return Platform.OS === 'android' ? 'http://10.0.2.2:8080' : 'http://localhost:8080';
+  }
+
+  throw new Error("EXPO_PUBLIC_API_URL is not defined");
+};
+
+export const API_BASE_URL = getBaseUrl();
