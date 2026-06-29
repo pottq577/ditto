@@ -1,6 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import { View, ActivityIndicator } from "react-native";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useFonts } from "expo-font";
 import { GowunBatang_400Regular } from "@expo-google-fonts/gowun-batang";
 import { GowunDodum_400Regular } from "@expo-google-fonts/gowun-dodum";
@@ -27,12 +27,18 @@ const MainApp = () => {
 };
 
 export default function App() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     GowunBatang_400Regular,
     GowunDodum_400Regular,
   });
 
-  if (!fontsLoaded) {
+  useEffect(() => {
+    if (fontError) {
+      console.error("폰트 로딩 실패:", fontError);
+    }
+  }, [fontError]);
+
+  if (!fontsLoaded && !fontError) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#F9F8F6" }}>
         <ActivityIndicator size="large" color="#E85D4E" />

@@ -1,11 +1,5 @@
 import React, { useState, useRef, useMemo } from "react";
-import {
-  Text,
-  View,
-  Image,
-  ActivityIndicator,
-  Alert,
-} from "react-native";
+import { Text, View, Image, ActivityIndicator, Alert } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as FileSystem from "expo-file-system/legacy";
 import { Logger } from "@/shared/lib/logger";
@@ -82,7 +76,8 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
     setIsProcessing(true);
     try {
       const formData = new FormData();
-      const ext = processedUri.split(".").pop()?.toLowerCase() === "png" ? "png" : "jpeg";
+      const ext =
+        processedUri.split(".").pop()?.toLowerCase() === "png" ? "png" : "jpeg";
       const mime = ext === "png" ? "image/png" : "image/jpeg";
       formData.append("file", {
         uri: processedUri,

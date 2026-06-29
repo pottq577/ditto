@@ -146,14 +146,19 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
   const renderItem: ListRenderItem<Sticker> = useCallback(
     ({ item: s, index }) => {
       // Signature: 아날로그 느낌을 위한 약간의 랜덤 회전율
-      const rotation = -3 + (index % 7); 
+      const rotation = -3 + (index % 7);
 
       return (
         <Animated.View
-          entering={FadeInUp.delay(index * 100).springify().damping(15)}
+          entering={FadeInUp.delay(index * 100)
+            .springify()
+            .damping(15)}
         >
           <AnimatedButton
-            style={[styles.stickerWrapper, { transform: [{ rotate: `${rotation}deg` }] }]}
+            style={[
+              styles.stickerWrapper,
+              { transform: [{ rotate: `${rotation}deg` }] },
+            ]}
             onPress={() => setActiveStickerId(s.id)}
           >
             <Image
@@ -170,11 +175,13 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
                 key={r.id}
                 style={[
                   styles.bubble,
-                  { 
-                    right: -40, 
+                  {
+                    right: -40,
                     top: rIdx * 45,
-                    transform: [{ rotate: `${-rotation + (rIdx % 3 - 1)}deg` }] // 말풍선도 약간 삐뚤게
-                  }
+                    transform: [
+                      { rotate: `${-rotation + ((rIdx % 3) - 1)}deg` },
+                    ], // 말풍선도 약간 삐뚤게
+                  },
                 ]}
               >
                 <Text style={styles.bubbleText}>{r.content}</Text>
@@ -188,21 +195,23 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
   );
 
   const ListEmptyComponent = () => (
-    <Text style={styles.emptyText}>아직 오늘 빈 페이지예요. 일상을 남겨보세요.</Text>
+    <Text style={styles.emptyText}>
+      아직 오늘 빈 페이지예요. 일상을 남겨보세요.
+    </Text>
   );
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <AnimatedButton 
-          onPress={onBack} 
+        <AnimatedButton
+          onPress={onBack}
           hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
           static
         >
           <Text style={styles.headerBtn}>오늘 담기</Text>
         </AnimatedButton>
         <Text style={styles.headerTitle}>우리의 오늘</Text>
-        <AnimatedButton 
+        <AnimatedButton
           onPress={fetchStickers}
           hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
           static
