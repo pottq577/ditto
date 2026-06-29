@@ -82,10 +82,12 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
     setIsProcessing(true);
     try {
       const formData = new FormData();
+      const ext = processedUri.split(".").pop()?.toLowerCase() === "png" ? "png" : "jpeg";
+      const mime = ext === "png" ? "image/png" : "image/jpeg";
       formData.append("file", {
         uri: processedUri,
-        name: `sticker_${Date.now()}.png`,
-        type: "image/png",
+        name: `sticker_${Date.now()}.${ext}`,
+        type: mime,
       } as any);
 
       const response = await fetch(
@@ -120,7 +122,14 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
     }
   };
 
-  const retake = () => {
+  const retake = async () => {
+    if (processedUri) {
+      try {
+        await FileSystem.deleteAsync(processedUri, { idempotent: true });
+      } catch (e) {
+        Logger.error("캐시 파일 삭제 실패", e);
+      }
+    }
     setProcessedUri(null);
   };
 
