@@ -34,9 +34,9 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
   if (!permission.granted) {
     return (
       <View style={styles.container}>
-        <Text style={styles.text}>카메라 권한이 필요합니다.</Text>
+        <Text style={styles.text}>카메라 권한이 필요해요.</Text>
         <AnimatedButton style={styles.button} onPress={requestPermission}>
-          <Text style={styles.buttonText}>권한 허용</Text>
+          <Text style={styles.buttonText}>권한 허용하기</Text>
         </AnimatedButton>
       </View>
     );
@@ -57,8 +57,8 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
           Logger.error("누끼 처리 실패:", err);
           const msg =
             err?.code === "NO_SUBJECT"
-              ? "피사체를 찾을 수 없습니다. 다시 찍어주세요."
-              : "누끼 처리 중 오류가 발생했습니다.";
+              ? "대상을 찾지 못했어요. 다시 찍어주세요."
+              : "배경을 지우는 중 문제가 생겼어요.";
           Alert.alert("오류", msg);
         } finally {
           try {
@@ -72,7 +72,7 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
       }
     } catch (error) {
       Logger.error("카메라 촬영 실패:", error);
-      Alert.alert("오류", "사진 촬영에 실패했습니다.");
+      Alert.alert("오류", "사진을 찍지 못했어요.");
     } finally {
       setIsProcessing(false);
     }
@@ -101,7 +101,7 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
       );
 
       if (response.ok) {
-        Alert.alert("성공", "일상을 담았습니다!");
+        Alert.alert("성공", "일상을 담았어요!");
 
         try {
           await FileSystem.deleteAsync(processedUri, { idempotent: true });
@@ -111,11 +111,11 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
 
         onComplete();
       } else {
-        Alert.alert("실패", "전송에 실패했습니다.");
+        Alert.alert("실패", "다이어리에 붙이지 못했어요.");
       }
     } catch (error) {
       Logger.error("업로드 에러:", error);
-      Alert.alert("오류", "업로드 중 오류가 발생했습니다.");
+      Alert.alert("문제 발생", "저장하는 중 문제가 생겼어요.");
     } finally {
       setIsProcessing(false);
     }

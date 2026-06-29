@@ -81,11 +81,11 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
         });
         setReactions((prev) => ({ ...prev, ...newReactions }));
       } else {
-        Alert.alert("조회 실패", "스티커 목록을 불러오지 못했습니다.");
+        Alert.alert("조회 실패", "스티커를 불러오지 못했어요.");
       }
     } catch (error) {
       Logger.error("스티커 조회 실패:", error);
-      Alert.alert("네트워크 오류", "서버와 통신할 수 없습니다.");
+      Alert.alert("네트워크 문제", "인터넷 연결을 확인해주세요.");
     } finally {
       setLoading(false);
     }
@@ -129,11 +129,11 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
         setActiveStickerId(null);
         fetchSingleReaction(submittedId);
       } else {
-        Alert.alert("전송 실패", "리액션을 남기지 못했습니다.");
+        Alert.alert("전송 실패", "글을 남기지 못했어요.");
       }
     } catch (e) {
       Logger.error("리액션 전송 실패", e);
-      Alert.alert("네트워크 오류", "서버와 통신할 수 없습니다.");
+      Alert.alert("네트워크 문제", "인터넷 연결을 확인해주세요.");
     } finally {
       setIsSubmitting(false);
     }
@@ -188,7 +188,7 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
   );
 
   const ListEmptyComponent = () => (
-    <Text style={styles.emptyText}>아직 오늘 빈 페이지예요. 일상을 캡처해 보세요.</Text>
+    <Text style={styles.emptyText}>아직 오늘 빈 페이지예요. 일상을 남겨보세요.</Text>
   );
 
   return (
@@ -248,7 +248,7 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
             disabled={isSubmitting || !reactionText.trim()}
           />
           <Button
-            title="취소"
+            title="닫기"
             onPress={() => setActiveStickerId(null)}
             color={colors.textMuted}
             disabled={isSubmitting}
