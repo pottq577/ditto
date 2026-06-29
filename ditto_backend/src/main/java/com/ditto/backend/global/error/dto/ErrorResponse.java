@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.ditto.backend.global.error.exception.ErrorCode;
+import org.springframework.validation.BindingResult;
+
+import org.springframework.validation.FieldError;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -16,9 +19,9 @@ public class ErrorResponse {
     private String message;
     private String code;
     private int status;
-    private List<FieldError> errors;
+    private List<ErrorDetail> errors;
 
-    private ErrorResponse(final ErrorCode code, final List<FieldError> errors) {
+    private ErrorResponse(final ErrorCode code, final List<ErrorDetail> errors) {
         this.message = code.getMessage();
         this.status = code.getStatus().value();
         this.code = code.getCode();
@@ -36,11 +39,31 @@ public class ErrorResponse {
         return new ErrorResponse(code);
     }
 
+    public static ErrorResponse of(final ErrorCode code, final BindingResult bindingResult) {
+        return new ErrorResponse(code, ErrorDetail.of(bindingResult));
+    }
+
     @Getter
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
-    public static class FieldError {
+    public static class ErrorDetail {
         private String field;
         private String value;
         private String reason;
+
+        private ErrorDetail(final String field, final String value, final String reason) {
+            this.field = field;
+            this.value = value;
+            this.reason = reason;
+        }
+
+        public static List<ErrorDetail> of(final BindingResult bindingResult) {
+            final List<FieldError> fieldErrors = bindingResult.getFieldErrors();
+            return fieldErrors.stream()
+                    .map(error -> new ErrorDetail(
+                            error.getField(),
+                            error.getRejectedValue() == null ? "" : error.getRejectedValue().toString(),
+                            error.getDefaultMessage()))
+                    .toList();
+        }
     }
 }

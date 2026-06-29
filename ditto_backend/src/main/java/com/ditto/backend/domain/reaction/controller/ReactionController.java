@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import com.ditto.backend.global.auth.LoginUser;
+import jakarta.validation.Valid;
 
 import com.ditto.backend.domain.reaction.dto.ReactionRequestDto;
 import com.ditto.backend.domain.reaction.dto.ReactionResponseDto;
@@ -29,7 +30,7 @@ public class ReactionController {
     @PostMapping
     public ResponseEntity<ReactionResponseDto> addReaction(
             @LoginUser Long userId,
-            @RequestBody ReactionRequestDto request) {
+            @Valid @RequestBody ReactionRequestDto request) {
         return ResponseEntity.ok(reactionService.addReaction(request.getStickerId(), userId, request.getContent()));
     }
 
