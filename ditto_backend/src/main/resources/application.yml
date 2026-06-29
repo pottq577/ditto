@@ -7,8 +7,13 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
-    show-sql: true
+    # show-sql: true
     properties:
       hibernate:
-        format_sql: true
+        # format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+rapidapi:
+  background-removal:
+    key: ${RAPIDAPI_BACKGROUND_REMOVAL_KEY}
+    host: background-removal-ai.p.rapidapi.com

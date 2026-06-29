@@ -1,128 +1,88 @@
-import React, { useState, useRef } from "react";
-import {
-  Text,
-  View,
-  TouchableOpacity,
-  Image,
-  ActivityIndicator,
-  Alert,
-} from "react-native";
+import React, { useState, useRef, useMemo } from "react";
+import { Text, View, Image, ActivityIndicator, Alert } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as FileSystem from "expo-file-system/legacy";
-import { removeBackground, Config } from "@imgly/background-removal";
-import { Logger } from "../../../shared/lib/logger";
-import { styles } from "./CameraPage.styles";
-import { API_BASE_URL } from "../../../shared/api/api";
-import { useAuth } from "../../../shared/lib/AuthContext";
+import { Logger } from "@/shared/lib/logger";
+import { createStyles } from "./CameraPage.styles";
+import { API_BASE_URL } from "@/shared/api/api";
+import { useAuth } from "@/shared/lib/AuthContext";
+import { BackgroundRemoval } from "@/shared/native/BackgroundRemovalModule";
+import { useTheme } from "@/shared/theme/theme";
+import { AnimatedButton } from "@/shared/ui/AnimatedButton";
 
 export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
   const { userId, coupleId } = useAuth();
+  const { colors, isDark } = useTheme();
+  const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
+
   const [permission, requestPermission] = useCameraPermissions();
-  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [processedUri, setProcessedUri] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const cameraRef = useRef<CameraView>(null);
 
   if (!permission) {
-    return <View />;
+    return <View style={styles.container} />;
   }
 
   if (!permission.granted) {
     return (
       <View style={styles.container}>
-        <Text style={styles.text}>카메라 권한이 필요합니다.</Text>
-        <TouchableOpacity style={styles.button} onPress={requestPermission}>
-          <Text style={styles.buttonText}>권한 허용</Text>
-        </TouchableOpacity>
+        <Text style={styles.text}>카메라 권한이 필요해요.</Text>
+        <AnimatedButton style={styles.button} onPress={requestPermission}>
+          <Text style={styles.buttonText}>권한 허용하기</Text>
+        </AnimatedButton>
       </View>
     );
   }
 
   const takePicture = async () => {
-    if (cameraRef.current) {
-      try {
-        const photo = await cameraRef.current.takePictureAsync({
-          base64: false,
-          quality: 0.8,
-        });
-
-        if (photo?.uri) {
-          processImage(photo.uri);
-        }
-      } catch (error) {
-        Logger.error("카메라 촬영 실패:", error);
-        Alert.alert("오류", "사진 촬영에 실패했습니다.");
-      }
-    }
-  };
-
-  const processImage = async (uri: string) => {
+    if (!cameraRef.current) return;
     setIsProcessing(true);
     try {
-      // 1. Fetch file as blob
-      const response = await fetch(uri);
-      const blob = await response.blob();
+      const photo = await cameraRef.current.takePictureAsync({ quality: 0.8 });
+      if (!photo?.uri) return;
 
-      // 2. Process with imgly
-      const config: Config = {
-        publicPath:
-          "https://static.imgly.com/@imgly/background-removal-data/1.4.3/dist/",
-        progress: (key, current, total) => {
-          Logger.info(`Downloading ${key}: ${current}/${total}`);
-        },
-      };
-
-      const resultBlob = await removeBackground(blob, config);
-
-      // 3. Convert result blob to base64 or save it
-      const reader = new FileReader();
-      reader.onloadend = async () => {
+      if (BackgroundRemoval) {
         try {
-          if (typeof reader.result !== "string") {
-            throw new Error("Failed to read processed image");
-          }
-
-          const filename = `nucci_${Date.now()}.png`;
-          const destPath = `${FileSystem.cacheDirectory}${filename}`;
-          const base64Code = reader.result.split(",")[1];
-
-          if (!base64Code) {
-            throw new Error("Failed to extract image payload");
-          }
-
-          await FileSystem.writeAsStringAsync(destPath, base64Code, {
-            encoding: FileSystem.EncodingType.Base64,
-          });
-
-          setPhotoUri(destPath);
-        } catch (error) {
-          Logger.error("누끼 저장 실패:", error);
-          Alert.alert("오류", "이미지 처리에 실패했습니다.");
+          const nuked = await BackgroundRemoval.removeBackground(photo.uri);
+          setProcessedUri(nuked);
+        } catch (err: any) {
+          Logger.error("누끼 처리 실패:", err);
+          const msg =
+            err?.code === "NO_SUBJECT"
+              ? "대상을 찾지 못했어요. 다시 찍어주세요."
+              : "배경을 지우는 중 문제가 생겼어요.";
+          Alert.alert("오류", msg);
         } finally {
-          setIsProcessing(false);
+          try {
+            await FileSystem.deleteAsync(photo.uri, { idempotent: true });
+          } catch (e) {
+            Logger.error("원본 파일 삭제 실패", e);
+          }
         }
-      };
-      reader.onerror = () => {
-        Logger.error("누끼 읽기 실패");
-        Alert.alert("오류", "이미지를 읽는데 실패했습니다.");
-        setIsProcessing(false);
-      };
-      reader.readAsDataURL(resultBlob);
+      } else {
+        setProcessedUri(photo.uri);
+      }
     } catch (error) {
-      Logger.error("누끼 처리 실패:", error);
-      Alert.alert("오류", "배경 제거 중 오류가 발생했습니다.");
+      Logger.error("카메라 촬영 실패:", error);
+      Alert.alert("오류", "사진을 찍지 못했어요.");
+    } finally {
       setIsProcessing(false);
     }
   };
 
   const sendSticker = async () => {
-    if (!photoUri || isProcessing) return;
+    if (!processedUri || isProcessing) return;
     setIsProcessing(true);
     try {
       const formData = new FormData();
+      const ext =
+        processedUri.split(".").pop()?.toLowerCase() === "png" ? "png" : "jpeg";
+      const mime = ext === "png" ? "image/png" : "image/jpeg";
       formData.append("file", {
-        uri: photoUri,
-        name: `sticker_${Date.now()}.png`,
-        type: "image/png",
+        uri: processedUri,
+        name: `sticker_${Date.now()}.${ext}`,
+        type: mime,
       } as any);
 
       const response = await fetch(
@@ -137,36 +97,42 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
       );
 
       if (response.ok) {
-        Alert.alert("성공", "전송 완료!");
+        Alert.alert("성공", "일상을 담았어요!");
 
-        // 업로드 성공 후 캐시 파일 삭제 (선택적)
         try {
-          await FileSystem.deleteAsync(photoUri, { idempotent: true });
+          await FileSystem.deleteAsync(processedUri, { idempotent: true });
         } catch (e) {
           Logger.error("캐시 파일 삭제 실패", e);
         }
 
         onComplete();
       } else {
-        Alert.alert("실패", "전송에 실패했습니다.");
+        Alert.alert("실패", "다이어리에 붙이지 못했어요.");
       }
     } catch (error) {
       Logger.error("업로드 에러:", error);
-      Alert.alert("오류", "업로드 중 오류가 발생했습니다.");
+      Alert.alert("문제 발생", "저장하는 중 문제가 생겼어요.");
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const retake = () => {
-    setPhotoUri(null);
+  const retake = async () => {
+    if (processedUri) {
+      try {
+        await FileSystem.deleteAsync(processedUri, { idempotent: true });
+      } catch (e) {
+        Logger.error("캐시 파일 삭제 실패", e);
+      }
+    }
+    setProcessedUri(null);
   };
 
-  if (photoUri) {
+  if (processedUri) {
     return (
       <View style={styles.container}>
         <Image
-          source={{ uri: photoUri }}
+          source={{ uri: processedUri }}
           style={styles.preview}
           resizeMode="contain"
         />
@@ -174,24 +140,24 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
           <ActivityIndicator
             style={styles.loader}
             size="large"
-            color="#ffffff"
+            color={colors.primary}
           />
         )}
         <View style={styles.actionRow}>
-          <TouchableOpacity
+          <AnimatedButton
             style={styles.button}
             onPress={retake}
             disabled={isProcessing}
           >
-            <Text style={styles.buttonText}>다시 찍기</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+            <Text style={styles.buttonText}>다시 담기</Text>
+          </AnimatedButton>
+          <AnimatedButton
             style={[styles.button, styles.sendButton]}
             onPress={sendSticker}
             disabled={isProcessing}
           >
-            <Text style={styles.buttonText}>전송하기</Text>
-          </TouchableOpacity>
+            <Text style={styles.sendButtonText}>다이어리에 붙이기</Text>
+          </AnimatedButton>
         </View>
       </View>
     );
@@ -199,17 +165,28 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
 
   return (
     <View style={styles.container}>
-      <CameraView style={styles.camera} ref={cameraRef} facing="back">
-        <View style={styles.overlay}>
-          {isProcessing ? (
-            <ActivityIndicator size="large" color="#ffffff" />
-          ) : (
-            <TouchableOpacity style={styles.captureBtn} onPress={takePicture}>
-              <View style={styles.captureInner} />
-            </TouchableOpacity>
-          )}
-        </View>
-      </CameraView>
+      <CameraView style={styles.camera} ref={cameraRef} facing="back" />
+      <View
+        style={[
+          styles.overlay,
+          {
+            position: "absolute",
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            zIndex: 10,
+          },
+        ]}
+      >
+        {isProcessing ? (
+          <ActivityIndicator size="large" color={colors.primary} />
+        ) : (
+          <AnimatedButton style={styles.captureBtn} onPress={takePicture}>
+            <View style={styles.captureInner} />
+          </AnimatedButton>
+        )}
+      </View>
     </View>
   );
 };

@@ -42,6 +42,7 @@ public class StickerService {
 
         User user = userRepository.getReferenceById(userId);
 
+        // 프론트에서 이미 누끼 처리된 PNG를 수신 → 바로 업로드 처리(운영: S3, 로컬: 임시 스토리지)
         String imageUrl = s3Uploader.upload(file);
 
         Sticker sticker = Sticker.builder()
