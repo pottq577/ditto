@@ -6,6 +6,7 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  Platform,
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as FileSystem from "expo-file-system/legacy";
@@ -13,11 +14,13 @@ import { Logger } from "@/shared/lib/logger";
 import { styles } from "./CameraPage.styles";
 import { API_BASE_URL } from "@/shared/api/api";
 import { useAuth } from "@/shared/lib/AuthContext";
+import { BackgroundRemoval } from "@/shared/native/BackgroundRemovalModule";
 
 export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
   const { userId, coupleId } = useAuth();
   const [permission, requestPermission] = useCameraPermissions();
-  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  /** 누끼 처리된 PNG URI. null이면 촬영 전 or 처리 전. */
+  const [processedUri, setProcessedUri] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const cameraRef = useRef<CameraView>(null);
 
@@ -37,34 +40,53 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
   }
 
   const takePicture = async () => {
-    if (cameraRef.current) {
-      try {
-        setIsProcessing(true);
-        const photo = await cameraRef.current.takePictureAsync({
-          quality: 0.8,
-        });
+    if (!cameraRef.current) return;
+    setIsProcessing(true);
+    try {
+      const photo = await cameraRef.current.takePictureAsync({ quality: 0.8 });
+      if (!photo?.uri) return;
 
-        if (photo?.uri) {
-          setPhotoUri(photo.uri);
+      // iOS: 네이티브 모듈로 온디바이스 누끼 처리
+      if (Platform.OS === "ios" && BackgroundRemoval) {
+        try {
+          const nuked = await BackgroundRemoval.removeBackground(photo.uri);
+          setProcessedUri(nuked);
+        } catch (err: any) {
+          Logger.error("누끼 처리 실패:", err);
+          const msg =
+            err?.code === "NO_SUBJECT"
+              ? "피사체를 찾을 수 없습니다. 다시 찍어주세요."
+              : "누끼 처리 중 오류가 발생했습니다.";
+          Alert.alert("오류", msg);
+        } finally {
+          // 원본 JPEG 임시 파일 삭제
+          try {
+            await FileSystem.deleteAsync(photo.uri, { idempotent: true });
+          } catch (e) {
+            Logger.error("원본 파일 삭제 실패", e);
+          }
         }
-      } catch (error) {
-        Logger.error("카메라 촬영 실패:", error);
-        Alert.alert("오류", "사진 촬영에 실패했습니다.");
-      } finally {
-        setIsProcessing(false);
+      } else {
+        // 비 iOS 환경 fallback (개발 참고용)
+        setProcessedUri(photo.uri);
       }
+    } catch (error) {
+      Logger.error("카메라 촬영 실패:", error);
+      Alert.alert("오류", "사진 촬영에 실패했습니다.");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const sendSticker = async () => {
-    if (!photoUri || isProcessing) return;
+    if (!processedUri || isProcessing) return;
     setIsProcessing(true);
     try {
       const formData = new FormData();
       formData.append("file", {
-        uri: photoUri,
-        name: `sticker_${Date.now()}.jpg`,
-        type: "image/jpeg",
+        uri: processedUri,
+        name: `sticker_${Date.now()}.png`,
+        type: "image/png",
       } as any);
 
       const response = await fetch(
@@ -82,7 +104,7 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
         Alert.alert("성공", "전송 완료!");
 
         try {
-          await FileSystem.deleteAsync(photoUri, { idempotent: true });
+          await FileSystem.deleteAsync(processedUri, { idempotent: true });
         } catch (e) {
           Logger.error("캐시 파일 삭제 실패", e);
         }
@@ -100,14 +122,14 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
   };
 
   const retake = () => {
-    setPhotoUri(null);
+    setProcessedUri(null);
   };
 
-  if (photoUri) {
+  if (processedUri) {
     return (
       <View style={styles.container}>
         <Image
-          source={{ uri: photoUri }}
+          source={{ uri: processedUri }}
           style={styles.preview}
           resizeMode="contain"
         />

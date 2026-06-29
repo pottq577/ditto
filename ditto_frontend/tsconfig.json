@@ -7,5 +7,6 @@
         "./src/*"
       ]
     }
-  }
+  },
+  "exclude": ["plugins", "node_modules"]
 }
