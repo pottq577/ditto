@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import {
   Text,
   View,
@@ -11,21 +11,24 @@ import {
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as FileSystem from "expo-file-system/legacy";
 import { Logger } from "@/shared/lib/logger";
-import { styles } from "./CameraPage.styles";
+import { createStyles } from "./CameraPage.styles";
 import { API_BASE_URL } from "@/shared/api/api";
 import { useAuth } from "@/shared/lib/AuthContext";
 import { BackgroundRemoval } from "@/shared/native/BackgroundRemovalModule";
+import { useTheme } from "@/shared/theme/theme";
 
 export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
   const { userId, coupleId } = useAuth();
+  const { colors, isDark } = useTheme();
+  const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
+
   const [permission, requestPermission] = useCameraPermissions();
-  /** 누끼 처리된 PNG URI. null이면 촬영 전 or 처리 전. */
   const [processedUri, setProcessedUri] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const cameraRef = useRef<CameraView>(null);
 
   if (!permission) {
-    return <View />;
+    return <View style={styles.container} />;
   }
 
   if (!permission.granted) {
@@ -46,7 +49,6 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
       const photo = await cameraRef.current.takePictureAsync({ quality: 0.8 });
       if (!photo?.uri) return;
 
-      // 네이티브 모듈로 온디바이스 누끼 처리 (iOS/Android 공통)
       if (BackgroundRemoval) {
         try {
           const nuked = await BackgroundRemoval.removeBackground(photo.uri);
@@ -59,7 +61,6 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
               : "누끼 처리 중 오류가 발생했습니다.";
           Alert.alert("오류", msg);
         } finally {
-          // 원본 JPEG 임시 파일 삭제
           try {
             await FileSystem.deleteAsync(photo.uri, { idempotent: true });
           } catch (e) {
@@ -67,7 +68,6 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
           }
         }
       } else {
-        // 비 iOS 환경 fallback (개발 참고용)
         setProcessedUri(photo.uri);
       }
     } catch (error) {
@@ -101,7 +101,7 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
       );
 
       if (response.ok) {
-        Alert.alert("성공", "전송 완료!");
+        Alert.alert("성공", "일상을 담았습니다!");
 
         try {
           await FileSystem.deleteAsync(processedUri, { idempotent: true });
@@ -137,7 +137,7 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
           <ActivityIndicator
             style={styles.loader}
             size="large"
-            color="#ffffff"
+            color={colors.primary}
           />
         )}
         <View style={styles.actionRow}>
@@ -146,14 +146,14 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
             onPress={retake}
             disabled={isProcessing}
           >
-            <Text style={styles.buttonText}>다시 찍기</Text>
+            <Text style={styles.buttonText}>다시 담기</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.button, styles.sendButton]}
             onPress={sendSticker}
             disabled={isProcessing}
           >
-            <Text style={styles.buttonText}>전송하기</Text>
+            <Text style={styles.sendButtonText}>다이어리에 붙이기</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -177,7 +177,7 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
         ]}
       >
         {isProcessing ? (
-          <ActivityIndicator size="large" color="#ffffff" />
+          <ActivityIndicator size="large" color={colors.primary} />
         ) : (
           <TouchableOpacity style={styles.captureBtn} onPress={takePicture}>
             <View style={styles.captureInner} />

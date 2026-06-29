@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
   Text,
   View,
@@ -12,9 +12,10 @@ import {
   ListRenderItem,
 } from "react-native";
 import { Logger } from "@/shared/lib/logger";
-import { styles } from "./MergedViewPage.styles";
+import { createStyles } from "./MergedViewPage.styles";
 import { API_BASE_URL } from "@/shared/api/api";
 import { useAuth } from "@/shared/lib/AuthContext";
+import { useTheme } from "@/shared/theme/theme";
 
 interface Sticker {
   id: number;
@@ -30,6 +31,9 @@ interface Reaction {
 
 export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
   const { userId, coupleId } = useAuth();
+  const { colors, isDark } = useTheme();
+  const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
+
   const [stickers, setStickers] = useState<Sticker[]>([]);
   const [reactions, setReactions] = useState<Record<number, Reaction[]>>({});
   const [loading, setLoading] = useState(true);
@@ -139,11 +143,16 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
   }, []);
 
   const renderItem: ListRenderItem<Sticker> = useCallback(
-    ({ item: s }) => {
+    ({ item: s, index }) => {
+      // Signature: 아날로그 느낌을 위한 약간의 랜덤 회전율
+      // index를 시드로 사용하여 렌더링 시마다 동일하게 유지
+      const rotation = -3 + (index % 7); 
+
       return (
         <TouchableOpacity
-          style={styles.stickerWrapper}
+          style={[styles.stickerWrapper, { transform: [{ rotate: `${rotation}deg` }] }]}
           onPress={() => setActiveStickerId(s.id)}
+          activeOpacity={0.8}
         >
           <Image
             source={{
@@ -152,12 +161,19 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
                 : s.imageUrl,
             }}
             style={styles.stickerImage}
-            resizeMode="contain"
+            resizeMode="cover"
           />
           {reactions[s.id]?.map((r, rIdx) => (
             <View
               key={r.id}
-              style={[styles.bubble, { right: -50, top: rIdx * 40 }]}
+              style={[
+                styles.bubble,
+                { 
+                  right: -40, 
+                  top: rIdx * 45,
+                  transform: [{ rotate: `${-rotation + (rIdx % 3 - 1)}deg` }] // 말풍선도 약간 삐뚤게
+                }
+              ]}
             >
               <Text style={styles.bubbleText}>{r.content}</Text>
             </View>
@@ -165,22 +181,22 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
         </TouchableOpacity>
       );
     },
-    [reactions],
+    [reactions, styles],
   );
 
   const ListEmptyComponent = () => (
-    <Text style={styles.emptyText}>아직 업로드된 스티커가 없습니다.</Text>
+    <Text style={styles.emptyText}>아직 오늘 빈 페이지예요. 일상을 캡처해 보세요.</Text>
   );
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={onBack}>
-          <Text style={styles.headerBtn}>← 카메라</Text>
+          <Text style={styles.headerBtn}>오늘 담기</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>오늘의 디토</Text>
+        <Text style={styles.headerTitle}>우리의 오늘</Text>
         <TouchableOpacity onPress={fetchStickers}>
-          <Text style={styles.headerBtn}>새로고침</Text>
+          <Text style={styles.headerBtn}>조각 모으기</Text>
         </TouchableOpacity>
       </View>
 
@@ -188,7 +204,7 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
         {loading ? (
           <ActivityIndicator
             size="large"
-            color="#ffffff"
+            color={colors.primary}
             style={{ marginTop: 100 }}
           />
         ) : (
@@ -197,7 +213,7 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderItem}
             ListEmptyComponent={ListEmptyComponent}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={{ paddingBottom: 120, paddingTop: 40 }}
             showsVerticalScrollIndicator={false}
           />
         )}
@@ -207,22 +223,23 @@ export const MergedViewPage = ({ onBack }: { onBack: () => void }) => {
         <View style={styles.reactionInputContainer}>
           <TextInput
             style={styles.input}
-            placeholder="말풍선 입력..."
-            placeholderTextColor="#ccc"
+            placeholder="이 순간에 남길 말..."
+            placeholderTextColor={colors.textMuted}
             value={reactionText}
             onChangeText={setReactionText}
             editable={!isSubmitting}
+            autoFocus
           />
           <Button
-            title={isSubmitting ? "전송중..." : "작성"}
+            title={isSubmitting ? "붙이는 중..." : "남기기"}
             onPress={submitReaction}
-            color="#4A90E2"
-            disabled={isSubmitting}
+            color={colors.primary}
+            disabled={isSubmitting || !reactionText.trim()}
           />
           <Button
             title="취소"
             onPress={() => setActiveStickerId(null)}
-            color="#999"
+            color={colors.textMuted}
             disabled={isSubmitting}
           />
         </View>

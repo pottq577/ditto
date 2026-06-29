@@ -1,14 +1,10 @@
 import { StyleSheet } from "react-native";
-import {
-  colors,
-  spacing,
-  typography,
-  globalStyles,
-} from "@/shared/theme/theme";
+import { spacing, typography, lightColors } from "@/shared/theme/theme";
 
-export const styles = StyleSheet.create({
+export const createStyles = (colors: typeof lightColors, isDark: boolean) => StyleSheet.create({
   container: {
-    ...globalStyles.container,
+    flex: 1,
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: "row",
@@ -17,7 +13,9 @@ export const styles = StyleSheet.create({
     paddingTop: spacing.xxl,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.divider,
   },
   headerTitle: {
     color: colors.text,
@@ -35,24 +33,45 @@ export const styles = StyleSheet.create({
   },
   emptyText: {
     color: colors.textMuted,
+    ...typography.mutedText,
     marginTop: 100,
+    textAlign: "center",
   },
   stickerWrapper: {
     width: 250,
     height: 250,
-    marginBottom: 40,
+    marginBottom: spacing.xl,
     alignSelf: "center",
   },
   stickerImage: {
     width: "100%",
     height: "100%",
+    borderWidth: 4,
+    borderColor: colors.stickerBorder,
+    backgroundColor: colors.surface,
+    // Add subtle shadow for the "sticker" feel
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: isDark ? 0.5 : 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   bubble: {
     position: "absolute",
     backgroundColor: colors.bubbleBackground,
-    padding: spacing.sm,
-    borderRadius: 15,
-    maxWidth: 150,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    // Asymmetric rounded corners for a "masking tape / speech bubble" feel
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    borderBottomLeftRadius: 4,
+    borderBottomRightRadius: 16,
+    maxWidth: 180,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: isDark ? 0.3 : 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   bubbleText: {
     color: colors.bubbleText,
@@ -68,6 +87,8 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.divider,
   },
   input: {
     flex: 1,
@@ -75,5 +96,6 @@ export const styles = StyleSheet.create({
     color: colors.text,
     padding: spacing.sm,
     borderRadius: 8,
+    ...typography.bodyText,
   },
 });
