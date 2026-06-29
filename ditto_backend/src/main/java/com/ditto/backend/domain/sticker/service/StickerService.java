@@ -22,6 +22,8 @@ import com.ditto.backend.global.infra.s3.MockS3Uploader;
 
 import lombok.RequiredArgsConstructor;
 
+import com.ditto.backend.global.infra.rapidapi.BackgroundRemovalClient;
+
 @Service
 @RequiredArgsConstructor
 public class StickerService {
@@ -30,6 +32,7 @@ public class StickerService {
     private final UserRepository userRepository;
     private final CoupleRepository coupleRepository;
     private final MockS3Uploader s3Uploader;
+    private final BackgroundRemovalClient backgroundRemovalClient;
 
     @Transactional
     public StickerResponseDto uploadSticker(Long userId, Long coupleId, MultipartFile file) {
@@ -42,7 +45,11 @@ public class StickerService {
 
         User user = userRepository.getReferenceById(userId);
 
-        String imageUrl = s3Uploader.upload(file);
+        // 1. RapidAPI를 통해 누끼 따기
+        byte[] processedImageBytes = backgroundRemovalClient.removeBackground(file);
+
+        // 2. 누끼 따진 이미지를 S3에 업로드 (PNG 형식으로 저장)
+        String imageUrl = s3Uploader.upload(processedImageBytes, "nucci.png", "image/png");
 
         Sticker sticker = Sticker.builder()
                 .user(user)

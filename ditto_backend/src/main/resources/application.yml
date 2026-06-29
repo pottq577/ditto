@@ -12,3 +12,8 @@ spring:
       hibernate:
         # format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+rapidapi:
+  background-removal:
+    key: 08163221acmsh9d44e2faab8fbd5p19ecf9jsnfa1e46c83483
+    host: background-removal-ai.p.rapidapi.com

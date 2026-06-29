@@ -56,4 +56,39 @@ public class MockS3Uploader {
             throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR);
         }
     }
+
+    public String upload(byte[] fileData, String originalFilename, String contentType) {
+        if (fileData == null || fileData.length == 0) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        try {
+            File dir = new File(UPLOAD_DIR);
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+            if (originalFilename == null) {
+                originalFilename = "unknown";
+            }
+            String cleanFilename = Paths.get(originalFilename).getFileName().toString();
+            String filename = System.currentTimeMillis() + "_" + cleanFilename;
+            Path filePath = Paths.get(UPLOAD_DIR, filename);
+
+            Path uploadDirPath = Paths.get(UPLOAD_DIR).toAbsolutePath().normalize();
+            Path targetPath = filePath.toAbsolutePath().normalize();
+
+            if (!targetPath.startsWith(uploadDirPath)) {
+                throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR);
+            }
+
+            Files.write(targetPath, fileData);
+            return "/uploads/" + filename;
+        } catch (IOException e) {
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR);
+        }
+    }
 }
