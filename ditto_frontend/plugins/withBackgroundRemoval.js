@@ -36,12 +36,10 @@ const withBackgroundRemoval = (config) => {
       );
 
       if (!alreadyAdded) {
-        IOSConfig.XcodeUtils.addResourceFileToGroup({
+        IOSConfig.XcodeUtils.addBuildSourceFileToGroup({
           filepath: path.join(projectName, file),
           groupName: projectName,
           project,
-          isBuildFile: true,
-          verbose: false,
         });
       }
     }

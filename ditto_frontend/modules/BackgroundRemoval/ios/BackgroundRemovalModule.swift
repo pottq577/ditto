@@ -39,7 +39,7 @@ final class BackgroundRemovalModule: NSObject {
                 // 처리 결과를 임시 파일로 저장
                 let tmpDir = FileManager.default.temporaryDirectory
                 let outURL = tmpDir.appendingPathComponent(
-                    "nucci_\(Int(Date().timeIntervalSince1970)).png"
+                    "nucci_\(UUID().uuidString).png"
                 )
                 guard let pngData = result.pngData() else {
                     reject("PNG_FAILED", "PNG 변환 실패", nil)

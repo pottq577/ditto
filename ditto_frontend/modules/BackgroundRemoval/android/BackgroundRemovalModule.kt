@@ -38,11 +38,14 @@ class BackgroundRemovalModule(reactContext: ReactApplicationContext) : ReactCont
                     try {
                         val tmpDir = reactApplicationContext.cacheDir
                         val tmpFile = File.createTempFile("nucci_", ".png", tmpDir)
-                        val outStream = FileOutputStream(tmpFile)
-                        // PNG로 압축 (무손실이므로 100)
-                        foregroundBitmap.compress(Bitmap.CompressFormat.PNG, 100, outStream)
-                        outStream.flush()
-                        outStream.close()
+                        FileOutputStream(tmpFile).use { outStream ->
+                            // PNG로 압축 (무손실이므로 100)
+                            val success = foregroundBitmap.compress(Bitmap.CompressFormat.PNG, 100, outStream)
+                            if (!success) {
+                                promise.reject("PROCESSING_FAILED", "이미지 압축(저장)에 실패했습니다.")
+                                return@addOnSuccessListener
+                            }
+                        }
 
                         promise.resolve("file://${tmpFile.absolutePath}")
                     } catch (e: Exception) {
@@ -51,6 +54,9 @@ class BackgroundRemovalModule(reactContext: ReactApplicationContext) : ReactCont
                 }
                 .addOnFailureListener { e ->
                     promise.reject("PROCESSING_FAILED", "누끼 처리 실패", e)
+                }
+                .addOnCompleteListener {
+                    segmenter.close()
                 }
         } catch (e: Exception) {
             promise.reject("LOAD_FAILED", "이미지 로드 실패", e)
