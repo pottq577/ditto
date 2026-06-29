@@ -4,7 +4,7 @@ import {
   spacing,
   typography,
   globalStyles,
-} from "../../../shared/theme/theme";
+} from "@/shared/theme/theme";
 
 export const styles = StyleSheet.create({
   container: {
