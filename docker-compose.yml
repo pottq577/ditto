@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  db:
+    build:
+      context: ./db
+      dockerfile: Dockerfile
+    container_name: ditto-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ditto_db
+      TZ: Asia/Seoul
+    volumes:
+      - ditto-postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  ditto-postgres-data:
