@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 
 interface BackgroundRemovalModuleType {
   removeBackground(imageUri: string): Promise<string>;
@@ -40,7 +40,7 @@ export const BackgroundRemoval: BackgroundRemovalModuleType = {
             FileSystem.cacheDirectory + `nucci_${Date.now()}.png`;
           try {
             await FileSystem.writeAsStringAsync(tempPath, base64data, {
-              encoding: FileSystem.EncodingType.Base64,
+              encoding: "base64" as any,
             });
             console.log(
               "[BackgroundRemoval] Saved removed background to",
