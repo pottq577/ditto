@@ -15,7 +15,8 @@
       }
     },
     "plugins": [
-      "./plugins/withBackgroundRemoval"
+      "./plugins/withBackgroundRemoval",
+      "./plugins/withBackgroundRemovalAndroid"
     ],
     "android": {
       "adaptiveIcon": {

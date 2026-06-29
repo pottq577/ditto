@@ -46,8 +46,8 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
       const photo = await cameraRef.current.takePictureAsync({ quality: 0.8 });
       if (!photo?.uri) return;
 
-      // iOS: 네이티브 모듈로 온디바이스 누끼 처리
-      if (Platform.OS === "ios" && BackgroundRemoval) {
+      // 네이티브 모듈로 온디바이스 누끼 처리 (iOS/Android 공통)
+      if (BackgroundRemoval) {
         try {
           const nuked = await BackgroundRemoval.removeBackground(photo.uri);
           setProcessedUri(nuked);

@@ -15,9 +15,9 @@ interface BackgroundRemovalModuleType {
 
 const { BackgroundRemovalModule } = NativeModules;
 
-if (Platform.OS === "ios" && !BackgroundRemovalModule) {
+if (!BackgroundRemovalModule) {
   console.warn(
-    "[BackgroundRemoval] 네이티브 모듈 없음. expo prebuild 후 Xcode 빌드 필요."
+    "[BackgroundRemoval] 네이티브 모듈 없음. expo prebuild 후 네이티브 빌드(Xcode/Android Studio) 필요."
   );
 }
 
