@@ -1,8 +1,8 @@
 package com.ditto.backend.domain.couple.entity;
 
 import com.ditto.backend.domain.user.entity.User;
-import com.ditto.backend.global.error.ErrorCode;
 import com.ditto.backend.global.error.exception.BusinessException;
+import com.ditto.backend.global.error.exception.ErrorCode;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
