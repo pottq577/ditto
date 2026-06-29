@@ -38,7 +38,7 @@ public class StickerController {
     }
 
     @GetMapping("/couple/{coupleId}")
-    public ResponseEntity<List<StickerResponseDto>> getCoupleStickers(@PathVariable Long coupleId) {
-        return ResponseEntity.ok(stickerService.getCoupleStickers(coupleId));
+    public ResponseEntity<List<StickerResponseDto>> getCoupleStickers(@PathVariable Long coupleId, @LoginUser Long userId) {
+        return ResponseEntity.ok(stickerService.getCoupleStickers(coupleId, userId));
     }
 }

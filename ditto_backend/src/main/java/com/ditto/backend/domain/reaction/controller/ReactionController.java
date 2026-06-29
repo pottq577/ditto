@@ -35,7 +35,7 @@ public class ReactionController {
     }
 
     @GetMapping("/sticker/{stickerId}")
-    public ResponseEntity<List<ReactionResponseDto>> getReactions(@PathVariable Long stickerId) {
-        return ResponseEntity.ok(reactionService.getReactions(stickerId));
+    public ResponseEntity<List<ReactionResponseDto>> getReactions(@PathVariable Long stickerId, @LoginUser Long userId) {
+        return ResponseEntity.ok(reactionService.getReactions(stickerId, userId));
     }
 }

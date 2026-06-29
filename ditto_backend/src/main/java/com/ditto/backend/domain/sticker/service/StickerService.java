@@ -56,7 +56,14 @@ public class StickerService {
     }
 
     @Transactional(readOnly = true)
-    public List<StickerResponseDto> getCoupleStickers(Long coupleId) {
+    public List<StickerResponseDto> getCoupleStickers(Long coupleId, Long userId) {
+        Couple couple = coupleRepository.findById(coupleId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.COUPLE_NOT_FOUND));
+
+        if (!couple.getUser1().getId().equals(userId) && !couple.getUser2().getId().equals(userId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+
         ZoneId zoneId = ZoneId.of("Asia/Seoul");
         LocalDateTime now = LocalDateTime.now(zoneId);
         LocalDateTime start;
