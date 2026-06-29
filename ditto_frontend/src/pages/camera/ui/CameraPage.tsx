@@ -15,10 +15,13 @@ import { styles } from "./CameraPage.styles";
 import { API_BASE_URL } from "@/shared/api/api";
 import { useAuth } from "@/shared/lib/AuthContext";
 
+import { NucciWebView } from "@/shared/ui/NucciWebView";
+
 export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
   const { userId, coupleId } = useAuth();
   const [permission, requestPermission] = useCameraPermissions();
   const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [rawBase64, setRawBase64] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const cameraRef = useRef<CameraView>(null);
 
@@ -40,86 +43,46 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
   const takePicture = async () => {
     if (cameraRef.current) {
       try {
+        setIsProcessing(true);
         const photo = await cameraRef.current.takePictureAsync({
-          base64: false,
+          base64: true,
           quality: 0.8,
         });
 
-        if (photo?.uri) {
-          processImage(photo.uri);
+        if (photo?.uri && photo?.base64) {
+          setPhotoUri(photo.uri); // 원본 이미지를 프리뷰로 먼저 표시 (로딩 중)
+          setRawBase64(photo.base64); // WebView로 전송하여 누끼 따기 시작
+        } else {
+          setIsProcessing(false);
         }
       } catch (error) {
         Logger.error("카메라 촬영 실패:", error);
         Alert.alert("오류", "사진 촬영에 실패했습니다.");
+        setIsProcessing(false);
       }
     }
   };
 
-  const processImage = async (uri: string) => {
-    setIsProcessing(true);
+  const handleNucciSuccess = async (resultBase64: string) => {
     try {
-      // 1. Fetch file as blob (RN에서 file:// fetch가 종종 실패하므로 대비)
-      let blob;
-      try {
-        const response = await fetch(uri);
-        blob = await response.blob();
-      } catch (e) {
-        Logger.error("로컬 파일 fetch 실패, 원본 이미지 사용:", e);
-        setPhotoUri(uri);
-        setIsProcessing(false);
-        return;
-      }
-
-      // 2. Process with imgly (RN 환경에서는 WASM/WebWorker 지원 한계로 실패할 확률 높음)
-      const config: Config = {
-        publicPath:
-          "https://static.imgly.com/@imgly/background-removal-data/1.4.3/dist/",
-      };
-
-      const resultBlob = await removeBackground(blob, config);
-
-      // 3. Convert result blob to base64 or save it
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        try {
-          if (typeof reader.result !== "string") {
-            throw new Error("Failed to read processed image");
-          }
-
-          const filename = `nucci_${Date.now()}.png`;
-          const destPath = `${FileSystem.cacheDirectory}${filename}`;
-          const base64Code = reader.result.split(",")[1];
-
-          if (!base64Code) {
-            throw new Error("Failed to extract image payload");
-          }
-
-          await FileSystem.writeAsStringAsync(destPath, base64Code, {
-            encoding: FileSystem.EncodingType.Base64,
-          });
-
-          setPhotoUri(destPath);
-        } catch (error) {
-          Logger.error("누끼 저장 실패, 원본 이미지 사용:", error);
-          setPhotoUri(uri);
-        } finally {
-          setIsProcessing(false);
-        }
-      };
-      reader.onerror = () => {
-        Logger.error("누끼 읽기 실패, 원본 이미지 사용");
-        setPhotoUri(uri);
-        setIsProcessing(false);
-      };
-      reader.readAsDataURL(resultBlob);
-    } catch (error) {
-      Logger.error(
-        "누끼 처리 실패(Web 전용 라이브러리 제약), 원본 이미지 사용:",
-        error,
-      );
-      setPhotoUri(uri); // 오류 시 원본 이미지라도 사용할 수 있게 Fallback
+      const filename = `nucci_${Date.now()}.png`;
+      const destPath = `${FileSystem.cacheDirectory}${filename}`;
+      await FileSystem.writeAsStringAsync(destPath, resultBase64, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      setPhotoUri(destPath); // 누끼 처리된 이미지로 교체
+    } catch (e) {
+      Logger.error("누끼 로컬 저장 실패, 원본 유지", e);
+    } finally {
       setIsProcessing(false);
+      setRawBase64(null);
     }
+  };
+
+  const handleNucciError = (error: string) => {
+    Logger.error("WebView 누끼 에러, 원본 유지:", error);
+    setIsProcessing(false);
+    setRawBase64(null);
   };
 
   const sendSticker = async () => {
@@ -201,6 +164,11 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
             <Text style={styles.buttonText}>전송하기</Text>
           </TouchableOpacity>
         </View>
+        <NucciWebView
+          base64Image={rawBase64}
+          onSuccess={handleNucciSuccess}
+          onError={handleNucciError}
+        />
       </View>
     );
   }
@@ -229,6 +197,11 @@ export const CameraPage = ({ onComplete }: { onComplete: () => void }) => {
           </TouchableOpacity>
         )}
       </View>
+      <NucciWebView
+        base64Image={rawBase64}
+        onSuccess={handleNucciSuccess}
+        onError={handleNucciError}
+      />
     </View>
   );
 };
