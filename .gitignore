@@ -16,6 +16,7 @@ node_modules/
 .env.*.local
 .env.*
 !.env.example
+.log/
 
 # Custom logs / Agent directories
 .claude/
