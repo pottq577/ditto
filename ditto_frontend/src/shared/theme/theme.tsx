@@ -17,7 +17,7 @@ export const lightColors = {
   stickerBorder: "#FFFFFF",
 };
 
-export const darkColors = {
+const darkColors = {
   background: "#1A1B22",
   surface: "#2A2D35",
   surfaceLight: "#23252C",
@@ -67,7 +67,7 @@ type ThemeContextType = {
   isDark: boolean;
 };
 
-export const ThemeContext = createContext<ThemeContextType>({
+const ThemeContext = createContext<ThemeContextType>({
   colors: lightColors,
   isDark: false,
 });

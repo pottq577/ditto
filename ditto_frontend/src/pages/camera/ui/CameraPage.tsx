@@ -5,7 +5,6 @@ import {
   Image,
   ActivityIndicator,
   Alert,
-  Platform,
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as FileSystem from "expo-file-system/legacy";
