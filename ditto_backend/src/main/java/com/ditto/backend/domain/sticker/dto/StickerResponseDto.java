@@ -9,4 +9,5 @@ public class StickerResponseDto {
     private Long id;
     private String imageUrl;
     private Long userId;
+
 }

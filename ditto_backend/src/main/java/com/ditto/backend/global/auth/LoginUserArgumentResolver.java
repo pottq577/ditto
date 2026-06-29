@@ -26,6 +26,6 @@ public class LoginUserArgumentResolver implements HandlerMethodArgumentResolver 
         if (userIdHeader == null) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
-        return Long.parseLong(userIdHeader);
+        return Long.valueOf(userIdHeader);
     }
 }
