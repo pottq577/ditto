@@ -12,6 +12,7 @@ public enum ErrorCode {
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "C001", "Invalid Input Value"),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "C002", "Invalid HTTP Method"),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "C003", "Server Error"),
+    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "C006", "Unauthorized"),
 
     // 엔티티 관련
     FORBIDDEN(HttpStatus.FORBIDDEN, "C005", "Access is denied"),

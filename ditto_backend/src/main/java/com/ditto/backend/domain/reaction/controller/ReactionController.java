@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import com.ditto.backend.global.auth.LoginUser;
+
 import com.ditto.backend.domain.reaction.dto.ReactionRequestDto;
 import com.ditto.backend.domain.reaction.dto.ReactionResponseDto;
 import com.ditto.backend.domain.reaction.service.ReactionService;
@@ -26,7 +28,7 @@ public class ReactionController {
 
     @PostMapping
     public ResponseEntity<ReactionResponseDto> addReaction(
-            @RequestHeader("X-User-Id") Long userId,
+            @LoginUser Long userId,
             @RequestBody ReactionRequestDto request) {
         return ResponseEntity.ok(reactionService.addReaction(request.getStickerId(), userId, request.getContent()));
     }
