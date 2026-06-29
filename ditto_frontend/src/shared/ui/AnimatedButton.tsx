@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, PressableProps, StyleProp, ViewStyle } from "react-native";
+import { Pressable, PressableProps, StyleProp, ViewStyle, StyleSheet } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -22,9 +22,13 @@ export const AnimatedButton = ({
 }: AnimatedButtonProps) => {
   const scale = useSharedValue(1);
 
+  const flattenedStyle = StyleSheet.flatten(style) ?? {};
+  const baseTransform = (flattenedStyle.transform as any[]) ?? [];
+  const { transform: _ignoredTransform, ...restStyle } = flattenedStyle;
+
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: scale.value }],
+      transform: [...baseTransform, { scale: scale.value }],
     };
   });
 
@@ -55,7 +59,7 @@ export const AnimatedButton = ({
       {...props}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      style={[style, animatedStyle]}
+      style={[restStyle, animatedStyle]}
     >
       {children}
     </AnimatedPressable>
